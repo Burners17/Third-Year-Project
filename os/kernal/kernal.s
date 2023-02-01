@@ -14,7 +14,6 @@ Initialise_Program
 ; code for setting up supervisor mode 
     ADRL  SP, Supervisor_Stack_End ; Sets up the Stack Pointer for Supervisor Mode
 
-
 ; code for setting up Interrupt mode 
 ; Switch to Interrupt Mode
     MRS R0, CPSR                      ; Read Current Status of CPSR
@@ -25,12 +24,19 @@ Initialise_Program
     ; Set Interrupt Stack Pointer
     ADRL SP, Interrupt_Stack_End      ; Sets up Interrupt Stack Pointer
 
+; Deactivates all interrupt alerts execpt when input from serial - prevents problems later on.
+      MOV     R1, #Base_Port_Area
+      MOV     R2, #0b0001_0000                ; Sets R2 to 0 so that all interrupts are inactive
+      STRB    R2, [R1, #Interrupt_Active_Offset]  ; Disables all active Interrupts
+
 ; code for setting up user mode 
     MOV R14, #&50 ; CPSR for user mode with interrupts enabled
     ;BIC R14, R14, #CPSR_Interupt_Enabled ; Enables Interrupts
     MSR SPSR, R14                    ; Updates the CPSR
     LDR R14, =User_Code_start
     MOVS PC, R14
+
+
 
 ; SVC call handeler code 
 ; get file 
