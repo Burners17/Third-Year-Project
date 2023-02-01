@@ -13,7 +13,7 @@ Fast_Interrupt_Request B Fast_Interrupt_Request ; If a Fast Interrupt occurs, PC
 Initialise_Program 
 ; code for setting up supervisor mode 
     ADRL  SP, Supervisor_Stack_End ; Sets up the Stack Pointer for Supervisor Mode
-
+    BL StanIn_Initialise
 ; code for setting up Interrupt mode 
 ; Switch to Interrupt Mode
     MRS R0, CPSR                      ; Read Current Status of CPSR
