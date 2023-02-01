@@ -1,0 +1,116 @@
+KMD
+00000000:             ; ; This is the main program for the OS that brings together the kernal 
+00000000:             ; ; and the moduls used to create the OS
+00000000:             ; ; This is also where all example programs will be loaded to. 
+00000000:             ; 
+00000000:             ; GET kernal/kernal.s 
+00000000: EA000006    ; B Initialise_Program  ; This Reset Exception
+00000004: EAFFFFFE    ; Undefined_Instruction B Undefined_Instruction ; Undefined Instruction cause a branch to here
+00000008: EA000010    ; B SVC_Handler         ; SVC calls jump to here and then go to the SVC Handler
+0000000C: EAFFFFFE    ; Prefetch_Abort        B Prefetch_Abort ; If there is a Prefect Abort the PC come here
+00000010: EAFFFFFE    ; Data_Abort            B Data_Abort     ; If there is a Data Abort the PC jump here
+00000014: EAFFFFFE    ; Not_Provided_Except   B Not_Provided_Except ; Do not know why PC might jump here
+00000018:             ; ; ---------------------------------------------------------
+00000018:             ; ; Needs to be done
+00000018: EA00000D    ; B IRQ_Handler         ; If and Interupt occurs PC jumps here.
+0000001C: EAFFFFFE    ; Fast_Interrupt_Request B Fast_Interrupt_Request ; If a Fast Interrupt occurs, PC jumps here
+00000020:             ; 
+00000020:             ; 
+00000020:             ; Initialise_Program 
+00000020:             ; ; code for setting up supervisor mode 
+00000020: E28FD086    ;     ADRL  SP, Supervisor_Stack_End ; Sets up the Stack Pointer for Supervisor Mode
+00000024: E28DDC02    ; 
+00000028:             ; 
+00000028:             ; 
+00000028:             ; ; code for setting up Interrupt mode 
+00000028:             ; ; Switch to Interrupt Mode
+00000028: E10F0000    ;     MRS R0, CPSR                      ; Read Current Status of CPSR
+0000002C: E3C0001F    ;     BIC R0, R0, #System_Mode_Bit_Mask ; Clears Mode field of CPSR
+00000030: E3800012    ;     ORR R0, R0, #IRQ_Mode             ; Append IRQ Mode to CPSR
+00000034: E121F000    ;     MSR CPSR_c, R0                    ; Updates the CPSR
+00000038:             ; 
+00000038:             ;     ; Set Interrupt Stack Pointer
+00000038: E28FD0C6    ;     ADRL SP, Interrupt_Stack_End      ; Sets up Interrupt Stack Pointer
+0000003C: E28DDB01    ; 
+00000040:             ; 
+00000040:             ; ; code for setting up user mode 
+00000040: E3A0E050    ;     MOV R14, #&50 ; CPSR for user mode with interrupts enabled
+00000044:             ;     ;BIC R14, R14, #CPSR_Interupt_Enabled ; Enables Interrupts
+00000044: E16FF00E    ;     MSR SPSR, R14                    ; Updates the CPSR
+00000048: E59FE4C8    ;     LDR R14, =User_Code_start
+0000004C: E1B0F00E    ;     MOVS PC, R14
+00000050:             ; 
+00000050:             ; ; SVC call handeler code 
+00000050:             ; ; get file 
+00000050:             ; GET kernal_SVC_Handler.s 
+00000050: EAFFFFFE    ; SVC_Handler  B SVC_Handler        ; SVC calls jump to here and then go to the SVC Handler
+00000054:             ; 
+00000054:             ; 
+00000054:             ; 
+00000054:             ; ; Interrupt handler 
+00000054:             ; ; get file 
+00000054:             ; GET kernal_IRQ_Handler.s 
+00000054:             ; IRQ_Handler 
+00000054: EAFFFFFE    ; B IRQ_Handler 
+00000058:             ; 
+00000058:             ; ; Kernal Constants 
+00000058:             ; GET kernal_constants.s
+00000058:             ; ; Constants used by the kernal are define here for easy access and maintance 
+00000058:             ; 
+00000058:             ; ; Constants used for initialse and changing user mode
+00000058:             ;     User_Mode   EQU &10         ; User Mode
+00000058:             ;     IRQ_Mode    EQU &12         ; Interrupt Mode
+00000058:             ;     System_Mode_Bit_Mask EQU &1F ; Used to clear the are that determines system mode
+00000058:             ;     CPSR_Interupt_Enabled EQU 0b1000_0000   ; Bit responsible for whether or not Interrupts are
+                      ;  Enabled
+00000058:             ; 
+00000058:             ; ; kernal memory. 
+00000058:             ; GET kernal_memory.s 
+00000058:             ; ; Any predefine memory used by the kernal will be here for easy access
+00000058:             ; 
+00000058:             ; Supervisor_Stack_Size EQU &256
+00000058:             ; Interrupt_Stack_Size  EQU &256
+00000058:             ; 
+00000058:             ;                     Align     ; Just in case size is not in base 2
+00000058:             ; ; Supervisor Stack
+00000058:             ; Supervisor_Stack_Start  DEFS Supervisor_Stack_Size ; Supervisor Stack
+000002AE:             ; Supervisor_Stack_End
+000002AE:             ; 
+000002B0:             ;                     Align
+000002B0:             ; ; Interrupt Stack 
+000002B0:             ; Interrupt_Stack_Start   DEFS Interrupt_Stack_Size ; Interrupt Stack
+00000506:             ; Interrupt_Stack_End
+00000508:             ;                     Align
+00000508:             ; 
+00000508:             ; 
+00000508:             ; User_Code_start
+00000508:             ; 
+00000508: E3A00000    ; MOV R0, #&0
+0000050C: E3A01001    ; MOV R1, #&1
+00000510: E3A02002    ; MOV R2, #&2
+00000514:             ; 
+00000514:             ; End
+00000514: EAFFFFFE    ; B End
+00000518: 00000508    ; Remaining literals
+
+Symbol Table: Labels
+: Undefined_Instruction             00000004  Local -- ARM
+: Prefetch_Abort                    0000000C  Local -- ARM
+: Data_Abort                        00000010  Local -- ARM
+: Not_Provided_Except               00000014  Local -- ARM
+: Fast_Interrupt_Request            0000001C  Local -- ARM
+: Initialise_Program                00000020  Local -- ARM
+: SVC_Handler                       00000050  Local -- ARM
+: IRQ_Handler                       00000054  Local -- ARM
+: User_Mode                         00000010  Value
+: IRQ_Mode                          00000012  Value
+: System_Mode_Bit_Mask              0000001F  Value
+: CPSR_Interupt_Enabled             00000080  Value
+: Supervisor_Stack_Size             00000256  Value
+: Interrupt_Stack_Size              00000256  Value
+: Supervisor_Stack_Start            00000058  Local -- ARM
+: Supervisor_Stack_End              000002AE  Local -- ARM
+: Interrupt_Stack_Start             000002B0  Local -- ARM
+: Interrupt_Stack_End               00000506  Local -- ARM
+: User_Code_start                   00000508  Local -- ARM
+: End                               00000514  Local -- ARM
