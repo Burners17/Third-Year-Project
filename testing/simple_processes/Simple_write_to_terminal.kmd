@@ -1,0 +1,25 @@
+KMD
+00000000:             ; Port_Area               EQU &1000_0000
+00000000:             ; Terminal_Data           EQU &10
+00000000:             ; Terminal_Control        EQU &14
+00000000:             ;         ALIGN 
+00000000:             ; 
+00000000:             ; main 
+00000000: E3A04201    ;         MOV R4, #Port_Area
+00000004: E3A05010    ;         MOV R5, #Terminal_Data
+00000008: E3A06014    ;         MOV R6, #Terminal_Control
+0000000C:             ; 
+0000000C: E3A01061    ;         MOV R1, #&61
+00000010: E7841005    ;         STR     R1, [R4, R5]
+00000014:             ; 
+00000014: E3A01063    ;         MOV R1, #&63
+00000018: E7841005    ;         STR     R1, [R4, R5]
+0000001C:             ;                 
+0000001C: EAFFFFFE    ; End B End
+
+Symbol Table: Labels
+: Port_Area                         10000000  Value
+: Terminal_Data                     00000010  Value
+: Terminal_Control                  00000014  Value
+: main                              00000000  Local -- ARM
+: End                               0000001C  Local -- ARM
