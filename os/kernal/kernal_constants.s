@@ -11,3 +11,4 @@
 
     Interrupt_Alert_Offset EQU &18
     Interrupt_Active_Offset EQU &1C
+    Interrupt_Desired       EQU 0b0001_0000

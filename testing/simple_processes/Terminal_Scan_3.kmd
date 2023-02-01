@@ -48,7 +48,7 @@ KMD
 0000007C: 03A00000    ;         MOVEQ R0, #&0   
 00000080: E1A0F00E    ;         MOV PC, LR
 00000084:             ; 
-00000084:             ; Write_Terminal
+00000084:             ; Write_Terminal ; does not include a wait if terminal is busy
 00000084: E7842005    ;         STR R2, [R4, R5]
 00000088: E1A0F00E    ;         MOV PC, LR
 0000008C:             ; 
@@ -63,7 +63,7 @@ KMD
 000000A8: E8BD0070    ;         POP  {R4, R5, R6} 
 000000AC: E1A0F00E    ;         MOV PC, LR
 000000B0:             ; 
-000000B0:             ; Read_Buffer
+000000B0:             ; Read_Buffer 
 000000B0: E92D00F0    ;         PUSH    {R4, R5, R6, R7}
 000000B4: E28F408C    ;         ADR     R4, Buffer_Pointer_Write
 000000B8: E5145000    ;         LDR     R5, [R4]

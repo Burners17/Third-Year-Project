@@ -6,19 +6,19 @@ KMD
 00000000:             ; GET kernal/kernal.s 
 00000000: EA000006    ; B Initialise_Program  ; This Reset Exception
 00000004: EAFFFFFE    ; Undefined_Instruction B Undefined_Instruction ; Undefined Instruction cause a branch to here
-00000008: EA000013    ; B SVC_Handler         ; SVC calls jump to here and then go to the SVC Handler
+00000008: EA000015    ; B SVC_Handler         ; SVC calls jump to here and then go to the SVC Handler
 0000000C: EAFFFFFE    ; Prefetch_Abort        B Prefetch_Abort ; If there is a Prefect Abort the PC come here
 00000010: EAFFFFFE    ; Data_Abort            B Data_Abort     ; If there is a Data Abort the PC jump here
 00000014: EAFFFFFE    ; Not_Provided_Except   B Not_Provided_Except ; Do not know why PC might jump here
 00000018:             ; ; ---------------------------------------------------------
 00000018:             ; ; Needs to be done
-00000018: EA000010    ; B IRQ_Handler         ; If and Interupt occurs PC jumps here.
+00000018: EA000012    ; B IRQ_Handler         ; If and Interupt occurs PC jumps here.
 0000001C: EAFFFFFE    ; Fast_Interrupt_Request B Fast_Interrupt_Request ; If a Fast Interrupt occurs, PC jumps here
 00000020:             ; 
 00000020:             ; 
 00000020:             ; Initialise_Program 
 00000020:             ; ; code for setting up supervisor mode 
-00000020: E28FD0B6    ;     ADRL  SP, Supervisor_Stack_End ; Sets up the Stack Pointer for Supervisor Mode
+00000020: E28FD0E6    ;     ADRL  SP, Supervisor_Stack_End ; Sets up the Stack Pointer for Supervisor Mode
 00000024: E28DDC02    ; 
 00000028:             ; 
 00000028:             ; ; code for setting up Interrupt mode 
@@ -29,104 +29,131 @@ KMD
 00000034: E121F000    ;     MSR CPSR_c, R0                    ; Updates the CPSR
 00000038:             ; 
 00000038:             ;     ; Set Interrupt Stack Pointer
-00000038: E28FD0F6    ;     ADRL SP, Interrupt_Stack_End      ; Sets up Interrupt Stack Pointer
-0000003C: E28DDB01    ; 
+00000038: E28FD026    ;     ADRL SP, Interrupt_Stack_End      ; Sets up Interrupt Stack Pointer
+0000003C: E28DDC05    ; 
 00000040:             ; 
 00000040:             ; ; Deactivates all interrupt alerts execpt when input from serial - prevents problems later on.
-00000040: E3A01201    ;       MOV     R1, #Base_Port_Area
-00000044: E3A02010    ;       MOV     R2, #0b0001_0000                ; Sets R2 to 0 so that all interrupts are inactiv
-                      ; e
-00000048: E5C1201C    ;       STRB    R2, [R1, #Interrupt_Active_Offset]  ; Disables all active Interrupts
-0000004C:             ; 
-0000004C:             ; ; code for setting up user mode 
-0000004C: E3A0E050    ;     MOV R14, #&50 ; CPSR for user mode with interrupts enabled
-00000050:             ;     ;BIC R14, R14, #CPSR_Interupt_Enabled ; Enables Interrupts
-00000050: E16FF00E    ;     MSR SPSR, R14                    ; Updates the CPSR
-00000054: E59FE4EC    ;     LDR R14, =User_Code_start
-00000058: E1B0F00E    ;     MOVS PC, R14
-0000005C:             ; 
-0000005C:             ; 
-0000005C:             ; 
-0000005C:             ; ; SVC call handeler code 
-0000005C:             ; ; get file 
-0000005C:             ; GET kernal_SVC_Handler.s 
-0000005C: EAFFFFFE    ; SVC_Handler  B SVC_Handler        ; SVC calls jump to here and then go to the SVC Handler
-00000060:             ; 
-00000060:             ; 
-00000060:             ; 
-00000060:             ; ; Interrupt handler 
-00000060:             ; ; get file 
-00000060:             ; GET kernal_IRQ_Handler.s 
-00000060:             ; ; currently set up for only possible interrupt
-00000060:             ; 
-00000060:             ; IRQ_Handler 
-00000060: E24EE004    ;     SUB LR, LR, #4 ; moves LR back on step 
-00000064: E92D40FF    ;     STMFD SP!, {R0-R7, LR}
+00000040: E3A00201    ;     MOV     R0, #Base_Port_Area
+00000044: E3A01000    ;     MOV R1, #0 
+00000048: E5C01018    ;     STRB R1, [R0, #Interrupt_Alert_Offset]  ; removes any existing alerts 
+0000004C: E3A01010    ;     MOV     R1, #0b0001_0000                ; Sets R2 to 0 so that all execpt rxD interrupts ar
+                      ; e inactive
+00000050: E5C0101C    ;     STRB    R1, [R0, #Interrupt_Active_Offset]  ; Disables all active Interrupts
+00000054:             ; 
+00000054:             ; ; code for setting up user mode 
+00000054: E3A0E050    ;     MOV R14, #&50 ; CPSR for user mode with interrupts enabled
+00000058:             ;     ;BIC R14, R14, #CPSR_Interupt_Enabled ; Enables Interrupts
+00000058: E16FF00E    ;     MSR SPSR, R14                    ; Updates the CPSR
+0000005C: E59FE514    ;     LDR R14, =User_Code_start
+00000060: E1B0F00E    ;     MOVS PC, R14
+00000064:             ; 
+00000064:             ; ; SVC call handeler code 
+00000064:             ; ; get file 
+00000064:             ; GET kernal_SVC_Handler.s 
+00000064: EAFFFFFE    ; SVC_Handler  B SVC_Handler        ; SVC calls jump to here and then go to the SVC Handler
 00000068:             ; 
-00000068:             ;     ; check if 
-00000068: E3A04201    ;     MOV R4, #Port_Area
-0000006C: E3A05010    ;         MOV R5, #Terminal_Data
-00000070: E3A06014    ;         MOV R6, #Terminal_Control
-00000074: E3A03004    ;     MOV R3, #&4
-00000078:             ; 
-00000078: E7942005    ;         LDR R2, [R4, R5]
-0000007C: E7842005    ;     STR R2, [R4, R5]
-00000080:             ; 
-00000080:             ; ; Return to were interrupt occured 
-00000080: E8FD80FF    ;     LDMFD SP!, {R0-R7, PC}^
+00000068:             ; 
+00000068:             ; 
+00000068:             ; ; Interrupt handler 
+00000068:             ; ; get file 
+00000068:             ; GET kernal_IRQ_Handler.s 
+00000068:             ; ; currently set up for only possible interrupt
+00000068:             ; 
+00000068:             ; IRQ_Handler 
+00000068: E24EE004    ;     SUB LR, LR, #4 ; moves LR back one step so no need to sub when returning
+0000006C: E92D400F    ;     STMFD SP!, {R0-R3, LR} ; preserves registers
+00000070:             ;     ; gets which interrupts were triggered 
+00000070: E3A00201    ;     MOV R0, #Base_Port_Area 
+00000074: E5D01018    ;     LDRB R1, [R0, #Interrupt_Alert_Offset]
+00000078: E2011010    ;     AND R1, R1, #Interrupt_Desired
+0000007C:             ; 
+0000007C:             ;     ; Check if serial ready to read is high 
+0000007C: E3110010    ;     TST R1, #&10
+00000080: 1B000004    ;     BLNE IRQ_RxD
 00000084:             ; 
-00000084: EAFFFFF5    ; B IRQ_Handler 
-00000088:             ; 
-00000088:             ; 
-00000088:             ; Port_Area               EQU &1000_0000
-00000088:             ; Terminal_Data           EQU &10
-00000088:             ; Terminal_Control        EQU &14
-00000088:             ; 
-00000088:             ; ; Kernal Constants 
-00000088:             ; GET kernal_constants.s
-00000088:             ; ; Constants used by the kernal are define here for easy access and maintance 
-00000088:             ; 
-00000088:             ; ; Constants used for initialse and changing user mode
-00000088:             ;     User_Mode   EQU &10         ; User Mode
-00000088:             ;     IRQ_Mode    EQU &12         ; Interrupt Mode
-00000088:             ;     System_Mode_Bit_Mask EQU &1F ; Used to clear the are that determines system mode
-00000088:             ;     CPSR_Interupt_Enabled EQU 0b1000_0000   ; Bit responsible for whether or not Interrupts are
+00000084:             ;     ; Check if serial ready to write is high 
+00000084: E3110020    ;     TST R1, #&20
+00000088: 1B000008    ;     BLNE IRQ_TxD    
+0000008C:             ; 
+0000008C:             ;     ; Check if time interrupt is high
+0000008C: E3110000    ;     TST R1, #&0
+00000090: 1B000007    ;     BLNE IRQ_Timer
+00000094:             ; 
+00000094:             ; ; Return to were interrupt occured 
+00000094: E8FD800F    ;     LDMFD SP!, {R0-R3, PC}^
+00000098:             ; 
+00000098:             ; 
+00000098:             ; IRQ_RxD ; takes input and send it to the terminal
+00000098: E3A02010    ;     MOV R2, #Terminal_Data
+0000009C: E7903002    ;     LDR R3, [R0, R2] ; gets input from serial 
+000000A0: E7803002    ;     STR R3, [R0, R2] ; places input on serial 
+000000A4: E3C11010    ;     BIC R1, R1, #0b0001_0000 ; clears serial RxD interrupt
+000000A8: E5C01018    ;     STRB R1, [R0, #Interrupt_Alert_Offset]
+000000AC: E1A0F00E    ;     MOV PC, LR
+000000B0:             ; 
+000000B0:             ; IRQ_TxD 
+000000B0:             ;     ; check if StandardOut has anything in its buffer 
+000000B0:             ;     ; if so place into TxD until either buffer is empty or TxD is no longer ready 
+000000B0:             ;     ; lower the TxD alert
+000000B0: EAFFFFFE    ; B IRQ_TxD 
+000000B4:             ; 
+000000B4:             ; IRQ_Timer
+000000B4:             ;     ; this is where timing interrupts are handled
+000000B4:             ;     ; will be used to start context switch 
+000000B4:             ; 
+000000B4: EAFFFFEB    ; B IRQ_Handler 
+000000B8:             ; 
+000000B8:             ; 
+000000B8:             ; Port_Area               EQU &1000_0000
+000000B8:             ; Terminal_Data           EQU &10
+000000B8:             ; Terminal_Control        EQU &14
+000000B8:             ; 
+000000B8:             ; ; Kernal Constants 
+000000B8:             ; GET kernal_constants.s
+000000B8:             ; ; Constants used by the kernal are define here for easy access and maintance 
+000000B8:             ; 
+000000B8:             ; ; Constants used for initialse and changing user mode
+000000B8:             ;     User_Mode   EQU &10         ; User Mode
+000000B8:             ;     IRQ_Mode    EQU &12         ; Interrupt Mode
+000000B8:             ;     System_Mode_Bit_Mask EQU &1F ; Used to clear the are that determines system mode
+000000B8:             ;     CPSR_Interupt_Enabled EQU 0b1000_0000   ; Bit responsible for whether or not Interrupts are
                       ;  Enabled
-00000088:             ; 
-00000088:             ; 
-00000088:             ;     Base_Port_Area  EQU &10000000   ; Defines I/O Base port area
-00000088:             ; 
-00000088:             ;     Interrupt_Alert_Offset EQU &18
-00000088:             ;     Interrupt_Active_Offset EQU &1C
-00000088:             ; 
-00000088:             ; ; kernal memory. 
-00000088:             ; GET kernal_memory.s 
-00000088:             ; ; Any predefine memory used by the kernal will be here for easy access
-00000088:             ; 
-00000088:             ; Supervisor_Stack_Size EQU &256
-00000088:             ; Interrupt_Stack_Size  EQU &256
-00000088:             ; 
-00000088:             ;                     Align     ; Just in case size is not in base 2
-00000088:             ; ; Supervisor Stack
-00000088:             ; Supervisor_Stack_Start  DEFS Supervisor_Stack_Size ; Supervisor Stack
-000002DE:             ; Supervisor_Stack_End
-000002DE:             ; 
-000002E0:             ;                     Align
-000002E0:             ; ; Interrupt Stack 
-000002E0:             ; Interrupt_Stack_Start   DEFS Interrupt_Stack_Size ; Interrupt Stack
-00000536:             ; Interrupt_Stack_End
-00000538:             ;                     Align
-00000538:             ; 
-00000538:             ; 
-00000538:             ; User_Code_start
-00000538:             ; 
-00000538: E3A00000    ; MOV R0, #&0
-0000053C: E3A01001    ; MOV R1, #&1
-00000540: E3A02002    ; MOV R2, #&2
-00000544:             ; 
-00000544:             ; End
-00000544: EAFFFFFE    ; B End
-00000548: 00000538    ; Remaining literals
+000000B8:             ; 
+000000B8:             ; 
+000000B8:             ;     Base_Port_Area  EQU &10000000   ; Defines I/O Base port area
+000000B8:             ; 
+000000B8:             ;     Interrupt_Alert_Offset EQU &18
+000000B8:             ;     Interrupt_Active_Offset EQU &1C
+000000B8:             ;     Interrupt_Desired       EQU 0b0001_0000
+000000B8:             ; 
+000000B8:             ; ; kernal memory. 
+000000B8:             ; GET kernal_memory.s 
+000000B8:             ; ; Any predefine memory used by the kernal will be here for easy access
+000000B8:             ; 
+000000B8:             ; Supervisor_Stack_Size EQU &256
+000000B8:             ; Interrupt_Stack_Size  EQU &256
+000000B8:             ; 
+000000B8:             ;                     Align     ; Just in case size is not in base 2
+000000B8:             ; ; Supervisor Stack
+000000B8:             ; Supervisor_Stack_Start  DEFS Supervisor_Stack_Size ; Supervisor Stack
+0000030E:             ; Supervisor_Stack_End
+0000030E:             ; 
+00000310:             ;                     Align
+00000310:             ; ; Interrupt Stack 
+00000310:             ; Interrupt_Stack_Start   DEFS Interrupt_Stack_Size ; Interrupt Stack
+00000566:             ; Interrupt_Stack_End
+00000568:             ;                     Align
+00000568:             ; 
+00000568:             ; 
+00000568:             ; User_Code_start
+00000568:             ; 
+00000568: E3A00000    ; MOV R0, #&0
+0000056C: E3A01001    ; MOV R1, #&1
+00000570: E3A02002    ; MOV R2, #&2
+00000574:             ; 
+00000574:             ; End
+00000574: EAFFFFFE    ; B End
+00000578: 00000568    ; Remaining literals
 
 Symbol Table: Labels
 : Undefined_Instruction             00000004  Local -- ARM
@@ -135,8 +162,11 @@ Symbol Table: Labels
 : Not_Provided_Except               00000014  Local -- ARM
 : Fast_Interrupt_Request            0000001C  Local -- ARM
 : Initialise_Program                00000020  Local -- ARM
-: SVC_Handler                       0000005C  Local -- ARM
-: IRQ_Handler                       00000060  Local -- ARM
+: SVC_Handler                       00000064  Local -- ARM
+: IRQ_Handler                       00000068  Local -- ARM
+: IRQ_RxD                           00000098  Local -- ARM
+: IRQ_TxD                           000000B0  Local -- ARM
+: IRQ_Timer                         000000B4  Local -- ARM
 : Port_Area                         10000000  Value
 : Terminal_Data                     00000010  Value
 : Terminal_Control                  00000014  Value
@@ -147,11 +177,12 @@ Symbol Table: Labels
 : Base_Port_Area                    10000000  Value
 : Interrupt_Alert_Offset            00000018  Value
 : Interrupt_Active_Offset           0000001C  Value
+: Interrupt_Desired                 00000010  Value
 : Supervisor_Stack_Size             00000256  Value
 : Interrupt_Stack_Size              00000256  Value
-: Supervisor_Stack_Start            00000088  Local -- ARM
-: Supervisor_Stack_End              000002DE  Local -- ARM
-: Interrupt_Stack_Start             000002E0  Local -- ARM
-: Interrupt_Stack_End               00000536  Local -- ARM
-: User_Code_start                   00000538  Local -- ARM
-: End                               00000544  Local -- ARM
+: Supervisor_Stack_Start            000000B8  Local -- ARM
+: Supervisor_Stack_End              0000030E  Local -- ARM
+: Interrupt_Stack_Start             00000310  Local -- ARM
+: Interrupt_Stack_End               00000566  Local -- ARM
+: User_Code_start                   00000568  Local -- ARM
+: End                               00000574  Local -- ARM

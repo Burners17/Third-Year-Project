@@ -25,9 +25,11 @@ Initialise_Program
     ADRL SP, Interrupt_Stack_End      ; Sets up Interrupt Stack Pointer
 
 ; Deactivates all interrupt alerts execpt when input from serial - prevents problems later on.
-      MOV     R1, #Base_Port_Area
-      MOV     R2, #0b0001_0000                ; Sets R2 to 0 so that all interrupts are inactive
-      STRB    R2, [R1, #Interrupt_Active_Offset]  ; Disables all active Interrupts
+    MOV     R0, #Base_Port_Area
+    MOV R1, #0 
+    STRB R1, [R0, #Interrupt_Alert_Offset]  ; removes any existing alerts 
+    MOV     R1, #0b0001_0000                ; Sets R2 to 0 so that all execpt rxD interrupts are inactive
+    STRB    R1, [R0, #Interrupt_Active_Offset]  ; Disables all active Interrupts
 
 ; code for setting up user mode 
     MOV R14, #&50 ; CPSR for user mode with interrupts enabled
@@ -35,8 +37,6 @@ Initialise_Program
     MSR SPSR, R14                    ; Updates the CPSR
     LDR R14, =User_Code_start
     MOVS PC, R14
-
-
 
 ; SVC call handeler code 
 ; get file 
