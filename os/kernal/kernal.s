@@ -1,3 +1,10 @@
+; Main file of kernal 
+;   Done 
+; 
+;   Needs to be done 
+;   Clean up used registers 
+
+
 B Initialise_Program  ; This Reset Exception
 Undefined_Instruction B Undefined_Instruction ; Undefined Instruction cause a branch to here
 B SVC_Handler         ; SVC calls jump to here and then go to the SVC Handler
@@ -13,8 +20,16 @@ Fast_Interrupt_Request B Fast_Interrupt_Request ; If a Fast Interrupt occurs, PC
 Initialise_Program 
 ; code for setting up supervisor mode 
     ADRL  SP, Supervisor_Stack_End ; Sets up the Stack Pointer for Supervisor Mode
-    BL StanIn_Initialise
-; code for setting up Interrupt mode 
+    BL kernal_Initial
+
+;Deactivates all interrupt alerts execpt when input from serial - prevents problems later on.
+    MOV     R0, #Base_Port_Area
+    MOV     R1, #0 
+    STRB    R1, [R0, #Interrupt_Alert_Offset]  ; removes any existing alerts 
+    MOV     R1, #0b0001_0000                ; Sets R2 to 0 so that all execpt rxD interrupts are inactive
+    STRB    R1, [R0, #Interrupt_Active_Offset]  ; Disables all active Interrupts
+
+
 ; Switch to Interrupt Mode
     MRS R0, CPSR                      ; Read Current Status of CPSR
     BIC R0, R0, #System_Mode_Bit_Mask ; Clears Mode field of CPSR
@@ -24,12 +39,6 @@ Initialise_Program
     ; Set Interrupt Stack Pointer
     ADRL SP, Interrupt_Stack_End      ; Sets up Interrupt Stack Pointer
 
-; Deactivates all interrupt alerts execpt when input from serial - prevents problems later on.
-    MOV     R0, #Base_Port_Area
-    MOV R1, #0 
-    STRB R1, [R0, #Interrupt_Alert_Offset]  ; removes any existing alerts 
-    MOV     R1, #0b0001_0000                ; Sets R2 to 0 so that all execpt rxD interrupts are inactive
-    STRB    R1, [R0, #Interrupt_Active_Offset]  ; Disables all active Interrupts
 
 ; code for setting up user mode 
     MOV R14, #&50 ; CPSR for user mode with interrupts enabled
@@ -47,8 +56,18 @@ GET kernal_SVC_Handler.s
 ; get file 
 GET kernal_IRQ_Handler.s 
 
+; Kernal initialiser 
+GET kernal_Initialise.s
+
+
 ; Kernal Constants 
 GET kernal_constants.s
+
+; Kernal data structurs 
+GET kernal_data_structures.s
+
+; kernal buffer template 
+GET kernal_buffer.s
 
 ; kernal memory. 
 GET kernal_memory.s 

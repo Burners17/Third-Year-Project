@@ -2,44 +2,53 @@
 
 IRQ_Handler 
     SUB LR, LR, #4 ; moves LR back one step so no need to sub when returning
-    STMFD SP!, {R0-R3, LR} ; preserves registers
+    STMFD SP!, {R0-R5, LR} ; preserves registers
     ; gets which interrupts were triggered 
-    MOV R0, #Base_Port_Area 
-    LDRB R1, [R0, #Interrupt_Alert_Offset]
-    AND R1, R1, #Interrupt_Desired
+    MOV R4, #Base_Port_Area 
+    LDRB R5, [R4, #Interrupt_Alert_Offset]
+    AND R5, R5, #Interrupt_Desired
 
     ; Check if serial ready to read is high 
-    TST R1, #&10
+    TST R5, #&10
     BLNE IRQ_RxD
 
     ; Check if serial ready to write is high 
-    TST R1, #&20
+    TST R5, #&20
     BLNE IRQ_TxD    
 
     ; Check if time interrupt is high
-    TST R1, #&0
+    TST R5, #&0
     BLNE IRQ_Timer
 
 ; Return to were interrupt occured 
-    LDMFD SP!, {R0-R3, PC}^
+    LDMFD SP!, {R0-R5, PC}^
 
+IRQ_RxD ; interrupt from serial receiver 
+    PUSH    {R6, LR} 
+    MOV R6, #Terminal_Data
+    LDR R1, [R4, R6] ; R4 comes from interrupt handler as a whole 
+    STR R1, [R4, R6] ; 
+    
+    ;Code to empty buffer 
+    CMP R1, #&A
+    BLEQ IRQ_RxD_empty 
 
-IRQ_RxD ; takes input and send it to the terminal
-    PUSH {LR}
-    MOV R2, #Terminal_Data
-    LDR R3, [R0, R2] ; gets input from serial 
-    STR R3, [R0, R2] ; places input on serial 
-    CMP R3, #&A
-    BEQ empty
-    MOV R0, R3
-    BL StandIn_Place
-    CMP R0, #&0
-tempL    BEQ tempL
-MOV R0, #Base_Port_Area 
-empty_return
-    BIC R1, R1, #0b0001_0000 ; clears serial RxD interrupt
-    STRB R1, [R0, #Interrupt_Alert_Offset]
-    POP {PC}
+    ADRNE     R0, StandardIn_Address
+    BLNE      buffer_put
+    BIC R5, R5, #0b0001_0000 ; clears serial RxD interrupt
+    STRB R5, [R4, #Interrupt_Alert_Offset]
+    POP     {R6, PC}
+
+IRQ_RxD_empty 
+    PUSH    {R6, LR}
+    ADR     R0, StandardIn_Address
+IRQ_RxD_empty_loop
+    MOV R6, #Terminal_Data
+    BL      buffer_get
+    CMP     R1, #&0
+    STRNE   R1, [R4, R6]
+    BNE     IRQ_RxD_empty_loop
+    POP     {R6, LR}
 
 IRQ_TxD 
     ; check if StandardOut has anything in its buffer 
@@ -52,22 +61,6 @@ IRQ_Timer
     ; will be used to start context switch 
 
 B IRQ_Handler 
-
-
-empty 
-    PUSH {R0-R4}
-empty_loop
-    BL StandIn_Get
-    MOV R4, #Base_Port_Area 
-    MOV R2, #Terminal_Data
-    CMP R1, #&1
-    STREQ R0, [R4, R2] ; places input on serial 
-    MOVNE R0, #&A
-    STRNE R0, [R4, R2]
-    BEQ empty_loop
-    POP {R0-R4}
-    ADR PC, empty_return
-
 
 Port_Area   		EQU &1000_0000
 Terminal_Data 		EQU &10
