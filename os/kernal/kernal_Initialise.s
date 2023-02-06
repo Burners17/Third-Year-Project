@@ -45,10 +45,6 @@ kernal_Initial
         LDR R14, =User_Code_start
         MOVS PC, R14
 
-
-
-
-
 standardIn_initialise
     PUSH    {R4, LR}
     ADRL     R0, StandardIn_start
