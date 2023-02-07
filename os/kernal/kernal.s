@@ -18,34 +18,7 @@ Fast_Interrupt_Request B Fast_Interrupt_Request ; If a Fast Interrupt occurs, PC
 
 
 Initialise_Program 
-; code for setting up supervisor mode 
-    ADRL  SP, Supervisor_Stack_End ; Sets up the Stack Pointer for Supervisor Mode
-    BL kernal_Initial
-
-;Deactivates all interrupt alerts execpt when input from serial - prevents problems later on.
-    MOV     R0, #Base_Port_Area
-    MOV     R1, #0 
-    STRB    R1, [R0, #Interrupt_Alert_Offset]  ; removes any existing alerts 
-    MOV     R1, #0b0001_0000                ; Sets R2 to 0 so that all execpt rxD interrupts are inactive
-    STRB    R1, [R0, #Interrupt_Active_Offset]  ; Disables all active Interrupts
-
-
-; Switch to Interrupt Mode
-    MRS R0, CPSR                      ; Read Current Status of CPSR
-    BIC R0, R0, #System_Mode_Bit_Mask ; Clears Mode field of CPSR
-    ORR R0, R0, #IRQ_Mode             ; Append IRQ Mode to CPSR
-    MSR CPSR_c, R0                    ; Updates the CPSR
-
-    ; Set Interrupt Stack Pointer
-    ADRL SP, Interrupt_Stack_End      ; Sets up Interrupt Stack Pointer
-
-
-; code for setting up user mode 
-    MOV R14, #&50 ; CPSR for user mode with interrupts enabled
-    ;BIC R14, R14, #CPSR_Interupt_Enabled ; Enables Interrupts
-    MSR SPSR, R14                    ; Updates the CPSR
-    LDR R14, =User_Code_start
-    MOVS PC, R14
+B kernal_Initial
 
 ; SVC call handeler code 
 ; get file 

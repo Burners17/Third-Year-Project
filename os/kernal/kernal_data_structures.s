@@ -9,7 +9,8 @@ buffer_waiter   word
 
 
 struct 
-pointer_next    word 
-proccess_id     word 
-context_pointer word 
+pointer_next            word 
+proccess_id             word 
+proccess_stack_pointer  word 
+proccess_constructor    word
     struct_align
