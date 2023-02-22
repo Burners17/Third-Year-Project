@@ -123,6 +123,7 @@ find_item_search_loop
     B find_item_search_loop   
     POP     {R4-R8, PC}   
 
+    
 
 end_of_list
     b end_of_list

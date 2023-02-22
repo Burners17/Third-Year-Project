@@ -2,6 +2,7 @@
 
 ; Varibles 
     ; stores address of StandardIn Buffer 
+    Serial_Reciever_Buffer_Address DEFS &16
     StandardIn_Address DEFS &16
     StandardOut_Address DEFS &16
         Align 
@@ -12,6 +13,7 @@
         Interrupt_Stack_Size    EQU &256
         StandardIn_Buffer_Size  EQU &256
         StandardIn_Buffer_Size  EQU &256
+        Serial_Reciever_Buffer_Size EQU &265
             Align     ; Just in case size is not in base 2
 
         ; Supervisor Stack
@@ -31,4 +33,8 @@
 
         StandardOut_start DEFS StandardOut_Buffer_Size
         StandardOut_End 
+            Align 
+
+        Serial_Reciever_Buffer_Start DEFS Serial_Reciever_Buffer_Size
+        Serial_Reciever_Buffer_End
             Align 
