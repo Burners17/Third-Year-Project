@@ -21,6 +21,19 @@ linked_list_add_loop
     STR     R1, [R4, #pointer_next]
     POP     {R4, PC}
 
+linked_list_get 
+; Inputs
+;   R0 pointer to linked list starting location   
+; Outputs 
+;   R1 pointer to first item ob list
+    PUSH    {R4, LR}    
+    LDR     R1, [R0]
+    CMP     R1, #&0 
+    LDRNE   R4, [R1, #pointer_next]
+    STRNE   R4, [R0]
+    MOVNE   R1, R4
+    POP     {R4, PC}
+
 ; Remove Item to List 
 linked_list_remove 
 ; Input 
@@ -28,7 +41,7 @@ linked_list_remove
 ; Output 
 ;   R0 if 0 then it failed 
     PUSH    {R4, LR}
-    BL      find_item 
+    BL      linked_list_find 
     ; check if item was found 
     CMP R0, #0 
     BEQ linked_list_remove_failed
@@ -58,7 +71,7 @@ linked_list_find_loop
     LDR     R6, [R4, #pointer_next]
     CMP     R6, #0 ; check if you reached end of line 
     BEQ     linked_list_find_end_of_list
-    LDR     R7, [R4, #proccess_id]
+    LDR     R7, [R4, #data]
     CMP     R7, R1
     BEQ     linked_list_find_item_found
     MOV     R5, R4
