@@ -1,0 +1,26 @@
+KMD
+00000000:             ; 
+00000000:             ; 
+00000000:             ; 
+00000000: E28F0014    ; ADR R0, Terminal_Handler_Commands_Table
+00000004: E5501000    ; LDRB R1, [R0]
+00000008: E5511000    ; LDRB R1, [R1]
+0000000C: E2800004    ; ADD R0, R0, #4
+00000010: E5502000    ; LDRB R2, [R0]
+00000014: E5522000    ; LDRB R2, [R2]
+00000018:             ; 
+00000018: EAFFFFFE    ; e b e
+0000001C:             ; Terminal_Handler_Commands_Table
+0000001C: 00000024    ;     DEFW Command_Echo
+00000020: 0000002C    ;     DEFW Command_Test
+00000024: 65 63 68 6F ; Command_Echo DEFB "echo",0
+00000028: 00          ; 
+0000002C:             ; Align 
+0000002C: 54 65 73 74 ; Command_Test DEFB "Test", 0
+00000030: 00          ; 
+
+Symbol Table: Labels
+: e                                 00000018  Local -- ARM
+: Terminal_Handler_Commands_Table   0000001C  Local -- ARM
+: Command_Echo                      00000024  Local -- ARM
+: Command_Test                      0000002C  Local -- ARM

@@ -8,9 +8,9 @@ Interrupt_Set_SVC       EQU &C
 Interrupt_Off_SVC       EQU &10
 Initialise_Process_SVC  EQU &14
 Initialise_Process_Return_SVC EQU &18
-Sheduler_Add_SVC        EQU 
-Sheduler_Remove_SVC     EQU 
-Sheduler_Next_SVC       EQU 
+;Sheduler_Add_SVC        EQU 
+;Sheduler_Remove_SVC     EQU 
+;Sheduler_Next_SVC       EQU 
 
 ; Constants used for initialse and changing user mode
     User_Mode   EQU &10         ; User Mode

@@ -29,26 +29,12 @@ IRQ_RxD ; interrupt from serial receiver
     LDR R1, [R4, R6] ; R4 comes from interrupt handler as a whole 
     STR R1, [R4, R6] ; 
     
-    ;Code to empty buffer 
-    CMP R1, #&A
-    BLEQ IRQ_RxD_empty 
-
-    ADRNE     R0, StandardIn_Address
-    BLNE      buffer_put
+    ADR     R0, Serial_RxD_Buffer_Address
+    LDR     R0, [R0]
+    BL      buffer_put
     BIC R5, R5, #0b0001_0000 ; clears serial RxD interrupt
     STRB R5, [R4, #Interrupt_Alert_Offset]
     POP     {R6, PC}
-
-IRQ_RxD_empty 
-    PUSH    {R6, LR}
-    ADR     R0, StandardIn_Address
-IRQ_RxD_empty_loop
-    MOV R6, #Terminal_Data
-    BL      buffer_get
-    CMP     R1, #&0
-    STRNE   R1, [R4, R6]
-    BNE     IRQ_RxD_empty_loop
-    POP     {R6, LR}
 
 IRQ_TxD 
     ; check if StandardOut has anything in its buffer 

@@ -88,3 +88,12 @@ buffer_get
 buffer_empty 
     MOV R1, #&0
     POP {R4-R6, PC}
+
+
+buffer_scan 
+    ; Inputs 
+    ; R0, Buffer address 
+    ; R1,  offset 
+    ; Outputs 
+    ; R1, output 
+    

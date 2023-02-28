@@ -17,8 +17,8 @@ SVC_Jump_Table      DEFW buffer_initialise
                     DEFW buffer_put
                     DEFW Interrupt_Set
                     DEFW Interrupt_Off
-                    DEFW Initialise_Process
-                    DEFW Initialise_Process_Return
+                    ;DEFW Initialise_Process
+                    ;DEFW Initialise_Process_Return
 SVC_Jump_Table_End
 
 SVC_Jump_Table_place_holder
