@@ -1,0 +1,33 @@
+KMD
+00000000:             ; Port_Area               EQU &1000_0000
+00000000:             ; Terminal_Data           EQU &10
+00000000:             ; Terminal_Control        EQU &14
+00000000:             ;         ALIGN 
+00000000:             ; 
+00000000:             ; main 
+00000000: E3A0A000    ;     MOV R10 , #0
+00000004: E3A04201    ;         MOV R4, #Port_Area
+00000008: E3A05010    ;         MOV R5, #Terminal_Data
+0000000C: E3A06014    ;         MOV R6, #Terminal_Control
+00000010:             ; 
+00000010:             ; loop
+00000010: E3A01030    ;     MOV R1, #&30
+00000014:             ; loe     
+00000014: E7841005    ;         STR R1, [R4, R5] 
+00000018: E2811001    ;     ADD R1, R1, #&1
+0000001C: E351003A    ;     CMP R1, #&3A
+00000020: 03A01030    ;     MOVEQ R1, #&30
+00000024: 028AA001    ;     ADDEQ R10, R10, #&1
+00000028: E35A000A    ;     CMP     R10, #&A
+0000002C: 0A000000    ;     BEQ     End
+00000030: EAFFFFF7    ;     b loe
+00000034: EAFFFFFE    ; End B End
+
+Symbol Table: Labels
+: Port_Area                         10000000  Value
+: Terminal_Data                     00000010  Value
+: Terminal_Control                  00000014  Value
+: main                              00000000  Local -- ARM
+: loop                              00000010  Local -- ARM
+: loe                               00000014  Local -- ARM
+: End                               00000034  Local -- ARM

@@ -1,9 +1,4 @@
-; Main file of kernal 
-;   Done 
-; 
-;   Needs to be done 
-;   Clean up used registers 
-
+; This is the start of the whole OS and the master File 
 
 B Initialise_Program  ; This Reset Exception
 Undefined_Instruction B Undefined_Instruction ; Undefined Instruction cause a branch to here
@@ -16,32 +11,22 @@ Not_Provided_Except   B Not_Provided_Except ; Do not know why PC might jump here
 B IRQ_Handler         ; If and Interupt occurs PC jumps here.
 Fast_Interrupt_Request B Fast_Interrupt_Request ; If a Fast Interrupt occurs, PC jumps here
 
+Initialise_Program
+b kernal_Initialise
 
-Initialise_Program 
-B kernal_Initialise 
-Get     ./process/process.s
-; SVC call handeler code 
-; get file 
-GET kernal_SVC_Handler.s 
-
-GET kernal_subroutines.s
-
-; Interrupt handler 
-; get file 
-GET kernal_IRQ_Handler.s 
-
-; Kernal initialiser 
+; Load Kernal Initialiser here 
 GET kernal_Initialise.s
 
+; Loads the SVC Handler Here 
+;GET kernal_SVC_Handler.s 
 
-; Kernal Constants 
-GET kernal_constants.s
+; Load the IRQ Handler Here 
+;GET kernal_IRQ_Handler.s 
 
-; Kernal data structurs 
-GET kernal_data_structures.s
+; Load Kernal Constants here 
+GET     kernal_memory.s 
 
-; kernal buffer template 
-GET kernal_buffer.s
+; Load Kernal Data Structurs 
+GET     kernal_data_structures.s
 
-; kernal memory. 
-GET kernal_memory.s 
+Get     ./process/process.s

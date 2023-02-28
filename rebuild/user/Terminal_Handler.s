@@ -1,19 +1,10 @@
 ; Terminal Handler Process 
+; This process handles intake from the terminal and determines how to respond
 
 ;   Register Index 
-    ; R8 is used to tell the process if it an echo input or not 1 is echo 0 is not echo
-    ; R9 is used to store #Terminal Data offset 
-    ; R10 is used to store #Terminal control offset 
-    ; R11 is used to store port area 
+    ; R10 is used to tell the process if it an echo input or not 1 is echo 0 is not echo 
+    ; R11 is used to store address of RxD buffer start  
     ; R12 is used to store address of buffer start 
-
-; First it needs a constructor 
-    ; It requries 
-        ; Buffer to place content of recievcer 
-        ; buffer to store content of reciever 
-        ; buffer to send things that should be sent to serial transmitter 
-        ; It up stack pointer 
-
 
 
 Terminal_Handler_Constructor
@@ -22,27 +13,26 @@ Terminal_Handler_Constructor
     ADRL    SP, Terminal_Handler_Stack_End
 
  ; Set up Buffer to store input from buffer 
-    ADRL    RO, StandardIn_start
-    ADRL    R12, StandardIn_Address
- ; Store address of StandardIn in memory location 
-    STR     R0, [R12]
+    ADRL    R12, StandardIn_start
+ ; Saves memeory address to process register 
+    MOV     R0, R12
     MOV     R1, #&40
-    SVC     Buffer_Initial_SVC
+    SVC     buffer_initialise
 
- ; Request that Interrupt for when something is received in RxD 
+; Request that Interrupt for when something is received in RxD 
     ; Set up reciever interrupt 
     MOV     R0, #Interrupt_Receiver
     SVC     Interrupt_Set_SVC
 
- ; Set up done, it returns to process set up 
 
 ;
 ; Main 
  ; Set up Constants 
-    MOV     R11, #Port_Area   
-    MOV     R10, #Terminal_Control
-    MOV     R9, #Terminal_Data
-    MOV     R8, #1
+    ADRL     R11, Serial_RxD_Buffer_Address 
+    MOV     R10, #1
+    ;MOV     R10, #Terminal_Control
+    ;MOV     R9, #Terminal_Data
+
  ;
  ; Second it needs to handler what happens when it is called 
 Terminal_Handler_Main_Loop
@@ -50,20 +40,18 @@ Terminal_Handler_Main_Loop
   ; XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
   ; 
   ; Check if there is anything in the RxD Buffer 
-   LDR     R0, [R11, R10]
-   TST     R0, #1
-   BEQ     Terminal_Handler_Main_Loop
+    MOV     R0, R11 
+    BL      buffer_get
+    CMP     R0, #&0
+    BEQ     Terminal_Handler_Main_Loop
 
-  ;
-  ; load from RxD 
-    LDR     R0, [R11, R10]
   ;
   ; Check if in protected mode 
     CMP     R8, #1
     BLEQ     Transmit 
   ;
   ; Check if the input is an Enter
-   CMP     R0, #&A
+    CMP     R0, #&A
     BEQ     Terminal_Handler_Commands
     ;   if it is an enter check if it is a known command 
 	; Checks if it has recieved a input from the serie line 
