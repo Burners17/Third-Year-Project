@@ -1,7 +1,7 @@
 KMD
 00000000:             ; ; This file is the main for the whole OS
 00000000:             ; 
-00000000:             ; GET Kernal_Files/kernal.s
+00000000:             ; GET Kernel_Files/kernel.s
 00000000:             ; ; This file is the main for the kernal 
 00000000:             ; 
 00000000: EA000006    ; B Initialise_Program  ; This Reset Exception
@@ -16,9 +16,9 @@ KMD
 0000001C: EAFFFFFE    ; Fast_Interrupt_Request B Fast_Interrupt_Request ; If a Fast Interrupt occurs, PC jumps here
 00000020:             ; 
 00000020:             ; Initialise_Program
-00000020: EA00001C    ; B kernal_Initialise
+00000020: EA00001D    ; B kernal_Initialise
 00000024:             ; 
-00000024:             ; GET     kernal_SVC_Handler.s
+00000024:             ; GET     kernel_SVC_Handler.s
 00000024: E92D4030    ; SVC_Handler PUSH  {R4-R5, LR}
 00000028: E51E4004    ;             LDR   R4, [LR, #-4] ; Read the SVC Instruction from the LR
 0000002C: E3C444FF    ;             BIC   R4, R4, #&FF000000 ; Masks off the Operation Code from SVC Call
@@ -34,8 +34,8 @@ KMD
 00000048: E1B0F00E    ;             MOVS  PC, LR              ; Restores CSPR code and moves PC to call address
 0000004C:             ; 
 0000004C:             ; SVC_Jump_Table_Size EQU SVC_Jump_Table_End - SVC_Jump_Table
-0000004C: 00000AA4    ; SVC_Jump_Table      DEFW Interrupt_Set
-00000050: 00000AB8    ;                     DEFW Interrupt_Off
+0000004C: 00000AA8    ; SVC_Jump_Table      DEFW Interrupt_Set
+00000050: 00000ABC    ;                     DEFW Interrupt_Off
 00000054:             ;                     ;DEFW Initialise_Process
 00000054:             ;                     ;DEFW Initialise_Process_Return
 00000054:             ; SVC_Jump_Table_End
@@ -44,7 +44,7 @@ KMD
 00000054:             ; 
 00000054:             ; ; SVC Call Out of Bounds
 00000054: EAFFFFFE    ; SVC_Out_Of_Bounds   B   SVC_Out_Of_Bounds ; SVC call out of bounds
-00000058:             ; GET     kernal_IRQ_Handler.s
+00000058:             ; GET     kernel_IRQ_Handler.s
 00000058:             ; ; Interrupt handler 
 00000058:             ; IRQ_Handler 
 00000058: E24EE004    ;     SUB     LR, LR, #4 ; moves LR back one step so no need to sub when returning
@@ -57,581 +57,598 @@ KMD
 00000068:             ; 
 00000068:             ;     ; Check if serial ready to read is high 
 00000068: E3150010    ;     TST R5, #&10
-0000006C: 1BFFFFFF    ;     BLNE IRQ_RxD
+0000006C: 1B000000    ;     BLNE IRQ_RxD
 00000070:             ; 
-00000070:             ; IRQ_RxD ; interrupt from serial receiver 
-00000070: E92D400F    ;     PUSH    {R0-R3, LR} 
-00000074: E3A03010    ;     MOV     R3, #Terminal_Data
-00000078: E7941003    ;     LDR     R1, [R4, R3] ; R4 comes from interrupt handler as a whole 
-0000007C: E7841003    ;     STR     R1, [R4, R3] ; 
-00000080:             ;     
-00000080: E28F0098    ;     ADR     R0, Serial_RxD_Buffer_Address
-00000084: E5100000    ;     LDR     R0, [R0]
-00000088: EB0002C1    ;     BL      buffer_put
-0000008C: E3C55010    ;     BIC     R5, R5, #0b0001_0000 ; clears serial RxD interrupt
-00000090: E5C45018    ;     STRB    R5, [R4, #Interrupt_Alert_Offset]
-00000094: E8BD800F    ;     POP     {R0-R3, PC}
-00000098:             ; 
-00000098:             ; 
-00000098:             ; 
-00000098:             ; ; Loads the Kernal_Initialise code 
-00000098:             ; GET     kernal_Initialise.s
-00000098:             ; ; This program will set up the Operating systems 
-00000098:             ; ; It will 
-00000098:             ; ;   Set up Supervisor mode
-00000098:             ; ;       Set Stack pointer  
-00000098:             ; ;   Set up Interrupt mode 
-00000098:             ; ;       Set up anything required by the interrupts 
-00000098:             ; ;       Set Stack pointer
-00000098:             ; 
-00000098:             ; kernal_Initialise
-00000098:             ; 
-00000098:             ; ; Set up Supervisor 
-00000098:             ;  ; Set up Stack pointer 
-00000098: E28FD0FA    ;   ADRL    SP, Supervisor_Stack_End
-0000009C: E28DDC02    ; 
-000000A0:             ; 
-000000A0:             ; ; Set up Interrupt Mode 
-000000A0:             ;  ; Set up anything required or used by interrupts 
-000000A0:             ;   ; RxD Interrupt 
-000000A0:             ;    ; This interrupt requires a buffer to place things into 
-000000A0:             ;     ; Get address of buffer and store it in a know variable 
-000000A0: E28F0F53    ;     ADRL    R0, Serial_RxD_Buffer_Start
-000000A4: E2800B01    ; 
-000000A8: E28F1070    ;     ADRL    R1, Serial_RxD_Buffer_Address
-000000AC: E5010000    ;     STR     R0, [R1]
-000000B0:             ;     ; Initialise the buffer 
-000000B0: E3A01040    ;     MOV     R1, #&40
-000000B4: EB0002AD    ;     BL      buffer_initialise
-000000B8: E3A01005    ;     MOV     R1, #5
-000000BC: EB0002B4    ;     BL      buffer_put
-000000C0: E3A01000    ;     MOV     R1, #0 
-000000C4: EB0002C4    ;     BL      buffer_get        
-000000C8:             ;     
-000000C8:             ;   ; TxD Interrupt 
-000000C8:             ;    ; Buffer it uses
-000000C8:             ;     ; Get address of buffer and store it in a know variable 
-000000C8: E28F0FDF    ;     ADRL    R0, Serial_TxD_Buffer_Start
-000000CC: E2800B01    ; 
-000000D0: E28F1060    ;     ADRL    R1, Serial_TxD_Buffer_Address
-000000D4: E5010000    ;     STR     R0, [R1]
-000000D8:             ;     ; Initialise the buffer 
-000000D8: E3A01040    ;     MOV       R1, #&40
-000000DC: EB0002A3    ;     BL        buffer_initialise   
-000000E0:             ;   ; 
-000000E0:             ;   ; Timer Interrupt 
-000000E0:             ;   ; NA 
-000000E0:             ; ; Switch Mode to Interupt mode 
-000000E0: E10F0000    ;     MRS     R0, CPSR                      ; Read Current Status of CPSR
-000000E4: E3C0001F    ;     BIC     R0, R0, #System_Mode_Bit_Mask ; Clears Mode field of CPSR
-000000E8: E3800012    ;     ORR     R0, R0, #IRQ_Mode             ; Append IRQ Mode to CPSR
-000000EC: E121F000    ;     MSR     CPSR_c, R0                    ; Updates the CPSR
-000000F0:             ;  ;
-000000F0:             ;  ; Set up Interrupt Stack Pointer
-000000F0: E28FD0FA    ;     ADRL    SP, Interrupt_Stack_End      ; Sets up Interrupt Stack Pointer
-000000F4: E28DDB01    ; 
-000000F8:             ; 
-000000F8:             ; ; Most likely redundant
-000000F8:             ;  ; Return to Supervisor Mode 
-000000F8: E10F0000    ;     MRS     R0, CPSR                      ; Read Current Status of CPSR
-000000FC: E3C0001F    ;     BIC     R0, R0, #System_Mode_Bit_Mask ; Clears Mode field of CPSR
-00000100: E3800013    ;     ORR     R0, R0, #Super_Mode           ; Append Supervisor Mode to CPSR
-00000104: E121F000    ;     MSR     CPSR_c, R0                    ; Updates the CPSR
-00000108:             ;  ;
-00000108:             ; ;
-00000108:             ; ; Initialise first process which is always terminal handler 
-00000108: E28F0EBA    ;    ADRL     R0, Terminal_Handler_Process
-0000010C: E2800000    ; 
-00000110: E590E00C    ;    LDR      R14, [R0, #process_constructor]
-00000114: E3A00050    ;    MOV      R0, #&50
-00000118: E16FF000    ;    MSR      SPSR, R0 
-0000011C: E1B0F00E    ;    MOVS     PC, R14 
-00000120:             ; 
-00000120:             ; ; Loads Kernal Constants 
-00000120:             ; GET     kernal_constants.s 
-00000120:             ; ; This file holds all of the constants used by the kernal
-00000120:             ; ; Constants for diffe
-00000120:             ; IRQ_Mode                    EQU &12         ; Interrupt Mode
-00000120:             ; Super_Mode                  EQU &13         ; Supervisor Mode
-00000120:             ; System_Mode_Bit_Mask        EQU &1F ; Used to clear the are that determines system mode
-00000120:             ; Interrupt_Receiver          EQU 0b0001_0000
-00000120:             ; Interrupt_Transmit          EQU 0b0010_0000
-00000120:             ; Interrupt_Alert_Offset      EQU &18
-00000120:             ; Port_Area                   EQU &10000000
-00000120:             ; Interrupt_Active_Offset     EQU &1C
-00000120:             ; Interrupt_Receiver          EQU 0b0001_0000
-00000120:             ; 
-00000120:             ; 
-00000120:             ; ; Loads Kernal Variables 
-00000120:             ; GET     kernal_variables.s
-00000120:             ; ; This file holds all the variables used by the kernal
-00000120:             ; Serial_RxD_Buffer_Address   DEFS &16
-00000138:             ;     Align 
-00000138:             ; Serial_TxD_Buffer_Address   DEFS &1
+00000070:             ; ; Return to were interrupt occured 
+00000070: E8FD803F    ;     LDMFD SP!, {R0-R5, PC}^
+00000074:             ; 
+00000074:             ; IRQ_RxD ; interrupt from serial receiver 
+00000074: E92D400F    ;     PUSH    {R0-R3, LR} 
+00000078: E3A03010    ;     MOV     R3, #Terminal_Data
+0000007C: E7941003    ;     LDR     R1, [R4, R3] ; R4 comes from interrupt handler as a whole 
+00000080: E7841003    ;     STR     R1, [R4, R3] ; 
+00000084:             ;     
+00000084: E28F0098    ;     ADR     R0, Serial_RxD_Buffer_Address
+00000088: E5100000    ;     LDR     R0, [R0]
+0000008C: EB0002C1    ;     BL      buffer_put
+00000090: E3C55010    ;     BIC     R5, R5, #0b0001_0000 ; clears serial RxD interrupt
+00000094: E5C45018    ;     STRB    R5, [R4, #Interrupt_Alert_Offset]
+00000098: E8BD800F    ;     POP     {R0-R3, PC}
+0000009C:             ; 
+0000009C:             ; 
+0000009C:             ; 
+0000009C:             ; ; Loads the Kernal_Initialise code 
+0000009C:             ; GET     kernel_Initialise.s
+0000009C:             ; ; This program will set up the Operating systems 
+0000009C:             ; ; It will 
+0000009C:             ; ;   Set up Supervisor mode
+0000009C:             ; ;       Set Stack pointer  
+0000009C:             ; ;   Set up Interrupt mode 
+0000009C:             ; ;       Set up anything required by the interrupts 
+0000009C:             ; ;       Set Stack pointer
+0000009C:             ; 
+0000009C:             ; kernal_Initialise
+0000009C:             ; 
+0000009C:             ; ; Set up Supervisor 
+0000009C:             ;  ; Set up Stack pointer 
+0000009C: E28FD0FA    ;   ADRL    SP, Supervisor_Stack_End
+000000A0: E28DDC02    ; 
+000000A4:             ; 
+000000A4:             ; ; Set up Interrupt Mode 
+000000A4:             ;  ; Set up anything required or used by interrupts 
+000000A4:             ;   ; RxD Interrupt 
+000000A4:             ;    ; This interrupt requires a buffer to place things into 
+000000A4:             ;     ; Get address of buffer and store it in a know variable 
+000000A4: E28F0F53    ;     ADRL    R0, Serial_RxD_Buffer_Start
+000000A8: E2800B01    ; 
+000000AC: E28F1070    ;     ADRL    R1, Serial_RxD_Buffer_Address
+000000B0: E5010000    ;     STR     R0, [R1]
+000000B4:             ;     ; Initialise the buffer 
+000000B4: E28F109A    ;     ADRL    R1, Serial_RxD_Buffer_Size
+000000B8: E2811C01    ; 
+000000BC: E5111000    ;     LDR     R1, [R1]
+000000C0: EB0002AB    ;     BL      buffer_initialise
+000000C4:             ; 
+000000C4:             ;   ; TxD Interrupt 
+000000C4:             ;    ; Buffer it uses
+000000C4:             ;     ; Get address of buffer and store it in a know variable 
+000000C4: E28F0FE1    ;     ADRL    R0, Serial_TxD_Buffer_Start
+000000C8: E2800B01    ; 
+000000CC: E28F1068    ;     ADRL    R1, Serial_TxD_Buffer_Address
+000000D0: E5010000    ;     STR     R0, [R1]
+000000D4:             ;     ; Initialise the buffer 
+000000D4: E28F107A    ;     ADRL    R1, Serial_TxD_Buffer_Size
+000000D8: E2811C01    ; 
+000000DC: E5111000    ;     LDR     R1, [R1]
+000000E0: EB0002A3    ;     BL      buffer_initialise   
+000000E4:             ;   ; 
+000000E4:             ;   ; Timer Interrupt 
+000000E4:             ;   ; NA 
+000000E4:             ; ; Switch Mode to Interupt mode 
+000000E4: E10F0000    ;     MRS     R0, CPSR                      ; Read Current Status of CPSR
+000000E8: E3C0001F    ;     BIC     R0, R0, #System_Mode_Bit_Mask ; Clears Mode field of CPSR
+000000EC: E3800012    ;     ORR     R0, R0, #IRQ_Mode             ; Append IRQ Mode to CPSR
+000000F0: E121F000    ;     MSR     CPSR_c, R0                    ; Updates the CPSR
+000000F4:             ;  ;
+000000F4:             ;  ; Set up Interrupt Stack Pointer
+000000F4: E28FD0FA    ;     ADRL    SP, Interrupt_Stack_End      ; Sets up Interrupt Stack Pointer
+000000F8: E28DDB01    ; 
+000000FC:             ; 
+000000FC:             ; ; Most likely redundant
+000000FC:             ;  ; Return to Supervisor Mode 
+000000FC: E10F0000    ;     MRS     R0, CPSR                      ; Read Current Status of CPSR
+00000100: E3C0001F    ;     BIC     R0, R0, #System_Mode_Bit_Mask ; Clears Mode field of CPSR
+00000104: E3800013    ;     ORR     R0, R0, #Super_Mode           ; Append Supervisor Mode to CPSR
+00000108: E121F000    ;     MSR     CPSR_c, R0                    ; Updates the CPSR
+0000010C:             ;  ;
+0000010C:             ; ;
+0000010C:             ; ; Initialise first user process which is always terminal handler 
+0000010C: E28F0FE9    ;    ADRL     R0, Terminal_Handler_Process
+00000110: E2800B02    ; 
+00000114: E590E00C    ;    LDR      R14, [R0, #process_constructor]
+00000118:             ;    ; No need to preserve flags so this makes it easier
+00000118: E3A00050    ;    MOV      R0, #User_Mode_With_Int
+0000011C: E161F000    ;    MSR      SPSR_c, R0 
+00000120: E1B0F00E    ;    MOVS     PC, R14 
+00000124:             ; 
+00000124:             ; ; Loads Kernal Constants 
+00000124:             ; GET     kernel_constants.s 
+00000124:             ; ; This file holds all of the constants used by the kernal
+00000124:             ; ; Constants for diffe
+00000124:             ; IRQ_Mode                    EQU &12         ; Interrupt Mode
+00000124:             ; Super_Mode                  EQU &13         ; Supervisor Mode
+00000124:             ; System_Mode_Bit_Mask        EQU &1F ; Used to clear the are that determines system mode
+00000124:             ; User_Mode_With_Int          EQU &50
+00000124:             ; Interrupt_Receiver          EQU 0b0001_0000
+00000124:             ; Interrupt_Transmit          EQU 0b0010_0000
+00000124:             ; Interrupt_Alert_Offset      EQU &18
+00000124:             ; Port_Area                   EQU &10000000
+00000124:             ; Interrupt_Active_Offset     EQU &1C
+00000124:             ; Interrupt_Receiver          EQU 0b0001_0000
+00000124:             ; 
+00000124:             ; 
+00000124:             ; ; Loads Kernal Variables 
+00000124:             ; GET     kernel_variables.s
+00000124:             ; ; This file holds all the variables used by the kernal
+00000124:             ; Serial_RxD_Buffer_Address   DEFS &16
 0000013C:             ;     Align 
-0000013C: 00000000    ; current_process             DEFW 0
+0000013C:             ; Serial_TxD_Buffer_Address   DEFS &1
 00000140:             ;     Align 
-00000140: 00000000    ; sheduler_ready_list_start   DEFW 0 
+00000140: 00000000    ; current_process             DEFW 0
 00000144:             ;     Align 
-00000144:             ; 
-00000144:             ; ; Loads kernal predefined memeory 
-00000144:             ; GET     kernal_memory.s
-00000144:             ; ; This file includes all predefined memory used by the kernal 
-00000144:             ; 
-00000144:             ; ; Stacks 
-00000144:             ;     Supervisor_Stack_Size   EQU &256
-00000144:             ;     Interrupt_Stack_Size    EQU &256 
-00000144:             ;         Align 
-00000144:             ;     ; Supervisor Stack
-00000144:             ;     Supervisor_Stack_Start  DEFS Supervisor_Stack_Size ; Supervisor Stack
-0000039A:             ;     Supervisor_Stack_End
-0000039C:             ;         Align
-0000039C:             ;     ; Interrupt Stack 
-0000039C:             ;     Interrupt_Stack_Start   DEFS Interrupt_Stack_Size ; Interrupt Stack
-000005F2:             ;     Interrupt_Stack_End
-000005F4:             ;         Align
-000005F4:             ; ; Buffers 
-000005F4:             ;     Serial_RxD_Buffer_Size  EQU &256
-000005F4:             ;         Align 
-000005F4:             ;     Serial_TxD_Buffer_Size  EQU &256
-000005F4:             ;         Align 
-000005F4:             ; 
-000005F4:             ;     Serial_RxD_Buffer_Start DEFS Serial_RxD_Buffer_Size
-0000084A:             ;     Serial_RxD_Buffer_End
-0000084C:             ;         Align 
-0000084C:             ; 
-0000084C:             ;     Serial_TxD_Buffer_Start DEFS Serial_TxD_Buffer_Size
-00000AA2:             ;     Serial_TxD_Buffer_End
-00000AA4:             ;         Align
-00000AA4:             ; 
-00000AA4:             ; GET     Kernal_Subroutines/Subroutines_main.s 
-00000AA4:             ; 
-00000AA4:             ; GET Setting_Interrupts.s
-00000AA4:             ; Interrupt_Set 
-00000AA4:             ; ; this sets the desired interrupt 
-00000AA4:             ;       ; Enable the desired Interrupts, do not affect other Enabled Interrupts
-00000AA4: E3A01201    ;     MOV     R1, #Port_Area
-00000AA8: E5D1201C    ;     LDRB    R2, [R1, #Interrupt_Active_Offset]
-00000AAC: E1810000    ;     ORR     R0, R1, R0 ; Enables the desired interrupts without touching those already set
-00000AB0: E5C1001C    ;     STRB    R0, [R1, #Interrupt_Active_Offset]  ; memory location of enabled interrupts
-00000AB4: E1A0F00E    ;     MOV     PC, LR
-00000AB8:             ; 
-00000AB8:             ; Interrupt_Off 
-00000AB8:             ; ; this removes the desired interrupt 
-00000AB8: E3A01201    ;     MOV     R1, #Port_Area
-00000ABC: E5D1201C    ;     LDRB    R2, [R1, #Interrupt_Active_Offset]
-00000AC0: E1C10000    ;     BIC     R0, R1, R0 ; Enables the desired interrupts without touching those already set
-00000AC4: E5C1001C    ;     STRB    R0, [R1, #Interrupt_Active_Offset]  ; memory location of enabled interrupts
-00000AC8: E1A0F00E    ;     MOV     PC, LR
-00000ACC:             ; 
-00000ACC:             ; 
-00000ACC:             ; GET Transmit.s
-00000ACC:             ; ; This SVC will send what is requested to Serial Transmitter 
-00000ACC:             ; ; 
-00000ACC:             ; 
-00000ACC:             ; ; load control to see if transmitter internal buffer is full 
-00000ACC:             ; 
-00000ACC:             ; Transmit_word 
-00000ACC: E92D407E    ;     PUSH    {R1-R6, LR} 
-00000AD0: E3A05201    ;     MOV     R5, #Port_Area
-00000AD4: E3A06014    ;     MOV     R6, #Terminal_Control
-00000AD8: E7951006    ;     LDR     R1, [R5, R6] 
-00000ADC: E3110002    ;     TST     R1, #2
-00000AE0:             ;    ; if EQ then hardware buffer is full 
-00000AE0: 1A000006    ;     BNE     Transmit_word_send
-00000AE4: E1A01000    ;     MOV     R1, R0 
-00000AE8: E24F0F6E    ;     ADRL    R0, Serial_TxD_Buffer_Address
-00000AEC: E2400B02    ; 
-00000AF0: EB000027    ;     BL      buffer_put
-00000AF4: E3A00020    ;     MOV     R0, #Interrupt_Transmit 
-00000AF8: EBFFFFE9    ;     BL      Interrupt_Set    
-00000AFC: E8BD807E    ;     POP     {R1-R6, PC} 
-00000B00:             ; 
-00000B00:             ; Transmit_word_send
-00000B00: E3A06010    ;     MOV     R6, #Terminal_Data
-00000B04: E7850006    ;     STR     R0, [R5, R6]
-00000B08: E8BD807E    ;     POP     {R1-R6, PC}     
-00000B0C:             ; ; if full place on buffer 
-00000B0C:             ; ; activate interrupt
-00000B0C:             ; 
-00000B0C:             ; 
-00000B0C:             ;  
-00000B0C:             ; 
-00000B0C:             ; 
-00000B0C:             ; GET Contest_Switching.s
-00000B0C:             ; ; File who does c
-00000B0C:             ; 
-00000B0C:             ; Context_Switch
-00000B0C:             ;     ; Function to check status of sheduler, maybe get the next one here 
-00000B0C: EA00000B    ;     B       Context_Store
-00000B10:             ; Context_Switch_Store_Return
-00000B10:             ;     ; no need to protect registers since they will be overwritten later anyway 
-00000B10: E24F1F77    ;     ADRL    R1, current_process  
-00000B14: E2411B02    ; 
-00000B18: E5111000    ;     LDR     R1, [R1]
-00000B1C: E24F0F79    ;     ADRL    R0, sheduler_ready_list_start  
-00000B20: E2400B02    ; 
-00000B24: EB000039    ;     BL      linked_list_add
-00000B28: E24F0E9F    ;     ADRL    R0, sheduler_ready_list_start  
-00000B2C: EB00003E    ;     BL      linked_list_get 
-00000B30:             ; 
-00000B30: E24F0F7F    ;     ADRL    R0, current_process  
-00000B34: E2400B02    ; 
-00000B38: E5001000    ;     STR     R1, [R0]
-00000B3C: EA000006    ;     B Context_Load
-00000B40:             ; 
-00000B40:             ; 
-00000B40:             ; Context_Store 
-00000B40: E96D6001    ;     PUSH    {R0, SP, LR}^
-00000B44: E24F0EA1    ;     ADRL    R0, current_process
-00000B48:             ;     ;LDR     R0, [R0, #context_switch_pointer]
-00000B48: E9005FFE    ;     STMFD   R0, {R1-R12, LR}
-00000B4C: E8BD000E    ;     POP     {R1-R3}
-00000B50: E14F4000    ;     MRS     R4, SPSR
-00000B54: E980001E    ;     STMFA   R0, {R1-R4}
-00000B58: EAFFFFEC    ;     B Context_Switch_Store_Return 
-00000B5C:             ; 
-00000B5C:             ; Context_Load
-00000B5C:             ;    ; ADRL    R1, current_process
-00000B5C:             ;     ;LDR     R1, [R1, #context_switch_pointer]
-00000B5C: E811001D    ;     LDMFA   R1, {R0, R2, R3, R4}
-00000B60:             ;     ;MSR     R4, SPSR
-00000B60: E92D000C    ;     PUSH    {R2, R3}
-00000B64: E8FD6000    ;     POP     {SP, LR}^
-00000B68: E8915FFE    ;     LDMFD   R1, {R1-R12, LR}
-00000B6C: E1B0F00E    ;     MOVS    PC, LR 
-00000B70:             ; 
-00000B70:             ; GET universal/universal_main.s
-00000B70:             ; ; This file is used to enable an easy load of all universal files
-00000B70:             ; 
-00000B70:             ; GET universal_constants.s 
-00000B70:             ; ; Constants used by all modes
-00000B70:             ; 
-00000B70:             ; ; SVC Codes
-00000B70:             ; Interrupt_Set_SVC       EQU &0 
-00000B70:             ; Interrupt_Off_SVC       EQU &4
-00000B70:             ; ;EQU &0 
-00000B70:             ; ;EQU &4
-00000B70:             ; ;EQU &8
-00000B70:             ; ;EQU &C 
-00000B70:             ; ;EQU &10
-00000B70:             ; ;EQU &14
-00000B70:             ; 
-00000B70:             ; 
-00000B70:             ; Terminal_Data           EQU &10
-00000B70:             ; Terminal_Control        EQU &14
-00000B70:             ; 
-00000B70:             ; GET data_structures/buffer.s
-00000B70:             ; ; Buffer Data Structure 
-00000B70:             ; ; Place in tail 
-00000B70:             ; ; Retriveve from head
-00000B70:             ; struct
-00000B70:             ; buffer_start    word 
-00000B70:             ; buffer_end      word 
-00000B70:             ; buffer_head     word
-00000B70:             ; buffer_tail     word 
-00000B70:             ; buffer_waiter   word
-00000B70:             ;     struct_align  
-00000B70:             ; 
-00000B70:             ; ; Functions 
-00000B70:             ; ; Initialise Buffer 
-00000B70:             ; buffer_initialise
-00000B70:             ; ; This function intialises a buffer data structure 
-00000B70:             ; ; Inputs 
-00000B70:             ; ;   R0 buffer starting address 
-00000B70:             ; ;   R1 buffer size in words 
-00000B70:             ; ;   
-00000B70: E92D4010    ;     PUSH    {R4, LR}
-00000B74: E2804014    ;     ADD     R4, R0, #&14 ; this calculates the start of buffer memory 
-00000B78: E5804000    ;     STR     R4, [R0, #buffer_start] ; stores start of buffer in start of buffer offset 
-00000B7C: E5804008    ;     STR     R4, [R0, #buffer_head]
-00000B80: E580400C    ;     STR     R4, [R0, #buffer_tail]
-00000B84: E5802010    ;     STR     R2, [R0, #buffer_waiter]
-00000B88: E0804001    ;     ADD     R4, R0, R1  
-00000B8C: E5804004    ;     STR     R4, [R0, #buffer_end]
-00000B90: E8BD8010    ;     POP     {R4, PC}
-00000B94:             ; 
-00000B94:             ; ; Place into buffer
-00000B94:             ; buffer_put 
-00000B94:             ; ; This function places a word into the buffer 
-00000B94:             ; ; Inputs 
-00000B94:             ; ;   R0 Address of where the buffer starts 
-00000B94:             ; ;   R1 Word to store 
-00000B94:             ; 
-00000B94: E92D40F0    ;     PUSH    {R4-R7, LR}
-00000B98: E5904008    ;     LDR     R4, [R0, #buffer_head]
-00000B9C: E590500C    ;     LDR     R5, [R0, #buffer_tail] 
-00000BA0:             ; ;   Check if buffer is full 
-00000BA0:             ; ;       Check if head is 1 word infront of tail 
-00000BA0: E2856004    ;     ADD     R6, R5, #&4
-00000BA4: E1560004    ;     CMP     R6, R4
-00000BA8: 0A00000A    ;     BEQ     buffer_full
-00000BAC:             ; ;       check if tail is at bottom of buffer and if so if tail is at base 
-00000BAC: E5906004    ;     LDR     R6, [R0, #buffer_end]
-00000BB0: E1560005    ;     CMP     R6, R5
-00000BB4: 05907000    ;     LDREQ   R7, [R0, #buffer_start]
-00000BB8: 01540007    ;     CMPEQ   R4, R7 
-00000BBC: 0A000005    ;     BEQ     buffer_full 
-00000BC0:             ; 
-00000BC0:             ; ;   place in buffer 
-00000BC0: E5051000    ;     STR     R1, [R5]
-00000BC4:             ;     ; if tail is at bottom of register move to top 
-00000BC4: E1560005    ;     CMP     R6, R5 
-00000BC8: 05905000    ;     LDREQ   R5, [R0, #buffer_start] ; 
-00000BCC:             ;     ; else add 4 
-00000BCC: 12855004    ;     ADDNE   R5, R5, #&4
-00000BD0:             ;     ; and save new tail pointer address 
-00000BD0: E580500C    ;     STR     R5, [R0, #buffer_tail]
-00000BD4: E8BD80F0    ;     POP     {R4-R7, PC}
-00000BD8:             ; 
-00000BD8:             ; ;XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-00000BD8:             ; buffer_full
-00000BD8: EAFFFFFE    ; B buffer_full
+00000144: 00000000    ; sheduler_ready_list_start   DEFW 0 
+00000148:             ;     Align 
+00000148:             ; 
+00000148:             ; ; Loads kernal predefined memeory 
+00000148:             ; GET     kernel_memory.s
+00000148:             ; ; This file includes all predefined memory used by the kernal 
+00000148:             ; 
+00000148:             ; ; Stacks 
+00000148:             ;     Supervisor_Stack_Size   EQU &256
+00000148:             ;     Interrupt_Stack_Size    EQU &256 
+00000148:             ;         Align 
+00000148:             ;     ; Supervisor Stack
+00000148:             ;     Supervisor_Stack_Start  DEFS Supervisor_Stack_Size ; Supervisor Stack
+0000039E:             ;     Supervisor_Stack_End
+000003A0:             ;         Align
+000003A0:             ;     ; Interrupt Stack 
+000003A0:             ;     Interrupt_Stack_Start   DEFS Interrupt_Stack_Size ; Interrupt Stack
+000005F6:             ;     Interrupt_Stack_End
+000005F8:             ;         Align
+000005F8:             ; ; Buffers 
+000005F8:             ;     Serial_RxD_Buffer_Size  EQU &256
+000005F8:             ;         Align 
+000005F8:             ;     Serial_TxD_Buffer_Size  EQU &256
+000005F8:             ;         Align 
+000005F8:             ; 
+000005F8:             ;     Serial_RxD_Buffer_Start DEFS Serial_RxD_Buffer_Size
+0000084E:             ;     Serial_RxD_Buffer_End
+00000850:             ;         Align 
+00000850:             ; 
+00000850:             ;     Serial_TxD_Buffer_Start DEFS Serial_TxD_Buffer_Size
+00000AA6:             ;     Serial_TxD_Buffer_End
+00000AA8:             ;         Align
+00000AA8:             ; 
+00000AA8:             ; GET     Kernel_Subroutines/Subroutines_main.s 
+00000AA8:             ; 
+00000AA8:             ; GET Setting_Interrupts.s
+00000AA8:             ; Interrupt_Set 
+00000AA8:             ; ; this sets the desired interrupt 
+00000AA8:             ;       ; Enable the desired Interrupts, do not affect other Enabled Interrupts
+00000AA8: E3A01201    ;     MOV     R1, #Port_Area
+00000AAC: E5D1201C    ;     LDRB    R2, [R1, #Interrupt_Active_Offset]
+00000AB0: E1810000    ;     ORR     R0, R1, R0 ; Enables the desired interrupts without touching those already set
+00000AB4: E5C1001C    ;     STRB    R0, [R1, #Interrupt_Active_Offset]  ; memory location of enabled interrupts
+00000AB8: E1A0F00E    ;     MOV     PC, LR
+00000ABC:             ; 
+00000ABC:             ; Interrupt_Off 
+00000ABC:             ; ; this removes the desired interrupt 
+00000ABC: E3A01201    ;     MOV     R1, #Port_Area
+00000AC0: E5D1201C    ;     LDRB    R2, [R1, #Interrupt_Active_Offset]
+00000AC4: E1C10000    ;     BIC     R0, R1, R0 ; Enables the desired interrupts without touching those already set
+00000AC8: E5C1001C    ;     STRB    R0, [R1, #Interrupt_Active_Offset]  ; memory location of enabled interrupts
+00000ACC: E1A0F00E    ;     MOV     PC, LR
+00000AD0:             ; 
+00000AD0:             ; 
+00000AD0:             ; GET Transmit.s
+00000AD0:             ; ; This SVC will send what is requested to Serial Transmitter 
+00000AD0:             ; ; 
+00000AD0:             ; 
+00000AD0:             ; ; load control to see if transmitter internal buffer is full 
+00000AD0:             ; 
+00000AD0:             ; Transmit_word 
+00000AD0: E92D407E    ;     PUSH    {R1-R6, LR} 
+00000AD4: E3A05201    ;     MOV     R5, #Port_Area
+00000AD8: E3A06014    ;     MOV     R6, #Terminal_Control
+00000ADC: E7951006    ;     LDR     R1, [R5, R6] 
+00000AE0: E3110002    ;     TST     R1, #2
+00000AE4:             ;    ; if EQ then hardware buffer is full 
+00000AE4: 1A000006    ;     BNE     Transmit_word_send
+00000AE8: E1A01000    ;     MOV     R1, R0 
+00000AEC: E24F0F6E    ;     ADRL    R0, Serial_TxD_Buffer_Address
+00000AF0: E2400B02    ; 
+00000AF4: EB000027    ;     BL      buffer_put
+00000AF8: E3A00020    ;     MOV     R0, #Interrupt_Transmit 
+00000AFC: EBFFFFE9    ;     BL      Interrupt_Set    
+00000B00: E8BD807E    ;     POP     {R1-R6, PC} 
+00000B04:             ; 
+00000B04:             ; Transmit_word_send
+00000B04: E3A06010    ;     MOV     R6, #Terminal_Data
+00000B08: E7850006    ;     STR     R0, [R5, R6]
+00000B0C: E8BD807E    ;     POP     {R1-R6, PC}     
+00000B10:             ; ; if full place on buffer 
+00000B10:             ; ; activate interrupt
+00000B10:             ; 
+00000B10:             ; 
+00000B10:             ;  
+00000B10:             ; 
+00000B10:             ; 
+00000B10:             ; GET Contest_Switching.s
+00000B10:             ; ; File who does c
+00000B10:             ; 
+00000B10:             ; Context_Switch
+00000B10:             ;     ; Function to check status of sheduler, maybe get the next one here 
+00000B10: EA00000B    ;     B       Context_Store
+00000B14:             ; Context_Switch_Store_Return
+00000B14:             ;     ; no need to protect registers since they will be overwritten later anyway 
+00000B14: E24F1F77    ;     ADRL    R1, current_process  
+00000B18: E2411B02    ; 
+00000B1C: E5111000    ;     LDR     R1, [R1]
+00000B20: E24F0F79    ;     ADRL    R0, sheduler_ready_list_start  
+00000B24: E2400B02    ; 
+00000B28: EB00003A    ;     BL      linked_list_add
+00000B2C: E24F0E9F    ;     ADRL    R0, sheduler_ready_list_start  
+00000B30: EB00003F    ;     BL      linked_list_get 
+00000B34:             ; 
+00000B34: E24F0F7F    ;     ADRL    R0, current_process  
+00000B38: E2400B02    ; 
+00000B3C: E5001000    ;     STR     R1, [R0]
+00000B40: EA000006    ;     B Context_Load
+00000B44:             ; 
+00000B44:             ; 
+00000B44:             ; Context_Store 
+00000B44: E96D6001    ;     PUSH    {R0, SP, LR}^
+00000B48: E24F0EA1    ;     ADRL    R0, current_process
+00000B4C:             ;     ;LDR     R0, [R0, #context_switch_pointer]
+00000B4C: E9005FFE    ;     STMFD   R0, {R1-R12, LR}
+00000B50: E8BD000E    ;     POP     {R1-R3}
+00000B54: E14F4000    ;     MRS     R4, SPSR
+00000B58: E980001E    ;     STMFA   R0, {R1-R4}
+00000B5C: EAFFFFEC    ;     B Context_Switch_Store_Return 
+00000B60:             ; 
+00000B60:             ; Context_Load
+00000B60:             ;    ; ADRL    R1, current_process
+00000B60:             ;     ;LDR     R1, [R1, #context_switch_pointer]
+00000B60: E811001D    ;     LDMFA   R1, {R0, R2, R3, R4}
+00000B64:             ;     ;MSR     R4, SPSR
+00000B64: E92D000C    ;     PUSH    {R2, R3}
+00000B68: E8FD6000    ;     POP     {SP, LR}^
+00000B6C: E8915FFE    ;     LDMFD   R1, {R1-R12, LR}
+00000B70: E1B0F00E    ;     MOVS    PC, LR 
+00000B74:             ; 
+00000B74:             ; GET memory_management.s
+00000B74:             ; 
+00000B74:             ; 
+00000B74:             ; GET universal/universal_main.s
+00000B74:             ; ; This file is used to enable an easy load of all universal files
+00000B74:             ; 
+00000B74:             ; GET universal_constants.s 
+00000B74:             ; ; Constants used by all modes
+00000B74:             ; 
+00000B74:             ; ; SVC Codes
+00000B74:             ; Interrupt_Set_SVC       EQU &0 
+00000B74:             ; Interrupt_Off_SVC       EQU &4
+00000B74:             ; ;EQU &0 
+00000B74:             ; ;EQU &4
+00000B74:             ; ;EQU &8
+00000B74:             ; ;EQU &C 
+00000B74:             ; ;EQU &10
+00000B74:             ; ;EQU &14
+00000B74:             ; 
+00000B74:             ; Word_Size           EQU &4
+00000B74:             ; 
+00000B74:             ; Terminal_Data           EQU &10
+00000B74:             ; Terminal_Control        EQU &14
+00000B74:             ; 
+00000B74:             ; GET data_structures/buffer.s
+00000B74:             ; ; Buffer Data Structure 
+00000B74:             ; ; Place in tail 
+00000B74:             ; ; Retriveve from head
+00000B74:             ; struct
+00000B74:             ; buffer_start    word 
+00000B74:             ; buffer_end      word 
+00000B74:             ; buffer_head     word
+00000B74:             ; buffer_tail     word 
+00000B74:             ; buffer_waiter   word
+00000B74:             ; buffer_data     alias
+00000B74:             ;     struct_align  
+00000B74:             ; 
+00000B74:             ; ; Functions 
+00000B74:             ; ; Initialise Buffer 
+00000B74:             ; buffer_initialise
+00000B74:             ; ; This function intialises a buffer data structure 
+00000B74:             ; ; Inputs 
+00000B74:             ; ;   R0 buffer starting address 
+00000B74:             ; ;   R1 buffer size in words 
+00000B74:             ; ;   
+00000B74: E92D4010    ;     PUSH    {R4, LR}
+00000B78: E2804014    ;     ADD     R4, R0, #&14 ; this calculates the start of buffer memory 
+00000B7C: E5804000    ;     STR     R4, [R0, #buffer_start] ; stores start of buffer in start of buffer offset 
+00000B80: E5804008    ;     STR     R4, [R0, #buffer_head]
+00000B84: E580400C    ;     STR     R4, [R0, #buffer_tail]
+00000B88: E5802010    ;     STR     R2, [R0, #buffer_waiter]
+00000B8C: E0804001    ;     ADD     R4, R0, R1  
+00000B90: E5804004    ;     STR     R4, [R0, #buffer_end]
+00000B94: E8BD8010    ;     POP     {R4, PC}
+00000B98:             ; 
+00000B98:             ; ; Place into buffer
+00000B98:             ; buffer_put 
+00000B98:             ; ; This function places a word into the buffer 
+00000B98:             ; ; Inputs 
+00000B98:             ; ;   R0 Address of where the buffer starts 
+00000B98:             ; ;   R1 Word to store 
+00000B98:             ; 
+00000B98: E92D40F0    ;     PUSH    {R4-R7, LR}
+00000B9C: E5904008    ;     LDR     R4, [R0, #buffer_head]
+00000BA0: E590500C    ;     LDR     R5, [R0, #buffer_tail] 
+00000BA4:             ; ;   Check if buffer is full 
+00000BA4:             ; ;       Check if head is 1 word infront of tail 
+00000BA4: E2856014    ;     ADD     R6, R5, #buffer_data
+00000BA8: E1560004    ;     CMP     R6, R4
+00000BAC: 0A00000A    ;     BEQ     buffer_full
+00000BB0:             ; ;       check if tail is at bottom of buffer and if so if tail is at base 
+00000BB0: E5906004    ;     LDR     R6, [R0, #buffer_end]
+00000BB4: E1560005    ;     CMP     R6, R5
+00000BB8: 05907000    ;     LDREQ   R7, [R0, #buffer_start]
+00000BBC: 01540007    ;     CMPEQ   R4, R7 
+00000BC0: 0A000005    ;     BEQ     buffer_full 
+00000BC4:             ; 
+00000BC4:             ; ;   place in buffer 
+00000BC4: E5051000    ;     STR     R1, [R5]
+00000BC8:             ;     ; if tail is at bottom of register move to top 
+00000BC8: E1560005    ;     CMP     R6, R5 
+00000BCC: 05905000    ;     LDREQ   R5, [R0, #buffer_start] ; 
+00000BD0:             ;     ; else add 4 
+00000BD0: 12855004    ;     ADDNE   R5, R5, #Word_Size
+00000BD4:             ;     ; and save new tail pointer address 
+00000BD4: E580500C    ;     STR     R5, [R0, #buffer_tail]
+00000BD8: E8BD80F0    ;     POP     {R4-R7, PC}
 00000BDC:             ; 
-00000BDC:             ; buffer_get 
-00000BDC:             ; ; This function retrieves a word from the buffer 
-00000BDC:             ; ; Inputs 
-00000BDC:             ; ;   R0 Address of where the buffer starts 
-00000BDC:             ; ; Outputs 
-00000BDC:             ; ;   R1 Word retrieved 
-00000BDC: E92D4070    ;     PUSH    {R4-R6, LR}
-00000BE0: E5904008    ;     LDR     R4, [R0, #buffer_head]
-00000BE4: E590500C    ;     LDR     R5, [R0, #buffer_tail]  
-00000BE8:             ; 
-00000BE8:             ;     ; Check if buffer is empty 
-00000BE8: E1540005    ;     CMP     R4, R5 
-00000BEC: 0A000006    ;     BEQ     buffer_empty 
-00000BF0:             ; 
-00000BF0:             ;  ; if not retrieve word 
-00000BF0: E5141000    ;     LDR     R1, [R4]
+00000BDC:             ; ;XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+00000BDC:             ; buffer_full
+00000BDC: EAFFFFFE    ; B buffer_full
+00000BE0:             ; 
+00000BE0:             ; buffer_get 
+00000BE0:             ; ; This function retrieves a word from the buffer 
+00000BE0:             ; ; Inputs 
+00000BE0:             ; ;   R0 Address of where the buffer starts 
+00000BE0:             ; ; Outputs 
+00000BE0:             ; ;   R1 Word retrieved 
+00000BE0: E92D4070    ;     PUSH    {R4-R6, LR}
+00000BE4: E5904008    ;     LDR     R4, [R0, #buffer_head]
+00000BE8: E590500C    ;     LDR     R5, [R0, #buffer_tail]  
+00000BEC:             ; 
+00000BEC:             ;     ; Check if buffer is empty 
+00000BEC: E1540005    ;     CMP     R4, R5 
+00000BF0: 0A000007    ;     BEQ     buffer_empty 
 00000BF4:             ; 
-00000BF4:             ;     ; check if head is at bottom of buffer 
+00000BF4:             ;     ; done here because loads can take time so reduces possible delay 
 00000BF4: E5906004    ;     LDR     R6, [R0, #buffer_end]
-00000BF8: E1540006    ;     CMP     R4, R6 
-00000BFC:             ;     ; if at bottom load buffer start address into register holding buffer head pointer 
-00000BFC: 05904000    ;     LDREQ   R4, [R0, #buffer_start]
-00000C00: 12844004    ;     ADDNE   R4, R4, #&4
-00000C04: E5804008    ;     STR     R4, [R0, #buffer_head]
-00000C08: E8BD8070    ;     POP     {R4-R6, PC}
-00000C0C:             ; 
-00000C0C:             ; 
-00000C0C:             ; ; XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-00000C0C:             ; buffer_empty 
-00000C0C: EAFFFFFE    ; B buffer_empty
-00000C10:             ; 
-00000C10:             ; GET data_structures/process.s
-00000C10:             ; ; Data Structure called processes 
-00000C10:             ; struct 
-00000C10:             ; pointer_next           word 
-00000C10:             ; process_id             word 
-00000C10:             ; process_stack_pointer  word 
-00000C10:             ; process_constructor    word
-00000C10:             ;     struct_align
-00000C10:             ; 
-00000C10:             ; 
-00000C10:             ; 
-00000C10:             ; GET data_structures/linked_list.s
-00000C10:             ; ; Linked List data Structure 
-00000C10:             ; 
-00000C10:             ; struct 
-00000C10:             ; pointer_next    word 
-00000C10:             ; data            word  
-00000C10:             ;     struct_align
-00000C10:             ; 
-00000C10:             ; ; Functions 
-00000C10:             ; ; Add Item to list 
-00000C10:             ; linked_list_add
-00000C10:             ; ; Function for adding an item to the list
-00000C10:             ; ; Inputs 
-00000C10:             ; ;   R0 Address of start of list     
-00000C10: E92D4010    ;     PUSH    {R4, LR} 
-00000C14:             ; linked_list_add_loop
-00000C14: E5904000    ;     LDR     R4, [R0, #pointer_next]
-00000C18:             ;     ; See if its null 
-00000C18: E3540000    ;     CMP     R4, #&0 
-00000C1C: 11A00004    ;     MOVNE   R0, R4 
-00000C20: 1AFFFFFB    ;     BNE     linked_list_add_loop
-00000C24: E5841000    ;     STR     R1, [R4, #pointer_next]
-00000C28: E8BD8010    ;     POP     {R4, PC}
-00000C2C:             ; 
-00000C2C:             ; linked_list_get 
-00000C2C:             ; ; Inputs
-00000C2C:             ; ;   R0 pointer to linked list starting location   
-00000C2C:             ; ; Outputs 
-00000C2C:             ; ;   R1 pointer to first item ob list
-00000C2C: E92D4010    ;     PUSH    {R4, LR}    
-00000C30: E5101000    ;     LDR     R1, [R0]
-00000C34: E3510000    ;     CMP     R1, #&0 
-00000C38: 15914000    ;     LDRNE   R4, [R1, #pointer_next]
-00000C3C: 15004000    ;     STRNE   R4, [R0]
-00000C40: 11A01004    ;     MOVNE   R1, R4
-00000C44: E8BD8010    ;     POP     {R4, PC}
-00000C48:             ; 
-00000C48:             ; ; Remove Item to List 
-00000C48:             ; linked_list_remove 
-00000C48:             ; ; Input 
-00000C48:             ; ;   R1 value of data for item removed    
-00000C48:             ; ; Output 
-00000C48:             ; ;   R0 if 0 then it failed 
-00000C48: E92D4010    ;     PUSH    {R4, LR}
-00000C4C: EB000006    ;     BL      linked_list_find 
-00000C50:             ;     ; check if item was found 
-00000C50: E3500000    ;     CMP R0, #0 
-00000C54: 0A000003    ;     BEQ linked_list_remove_failed
-00000C58:             ;     ; update pointer #
-00000C58: E5904000    ;     LDR     R4, [R0, #pointer_next]
-00000C5C: E5814000    ;     STR     R4, [R1, #pointer_next]
-00000C60:             ;     
-00000C60:             ;     ; Blanks pointer next of desired item 
-00000C60: E3A04000    ;     MOV     R4, #0 
-00000C64: E5804000    ;     STR     R4, [R0, #pointer_next]
-00000C68:             ; linked_list_remove_failed
-00000C68: E8BD8010    ;     POP     {R4, PC}
-00000C6C:             ; 
-00000C6C:             ; 
-00000C6C:             ; linked_list_find 
-00000C6C:             ; ; Function find item by data 
-00000C6C:             ; ; Input
-00000C6C:             ; ; R0 Pointer to start of linked list  
-00000C6C:             ; ; R1 Data of item function is looking for 
-00000C6C:             ; ; Ouput
-00000C6C:             ; ; R0 pointer to desired item 
-00000C6C:             ; ; R1 Pointer to preseding Item 
-00000C6C: E1A04000    ;     MOV     R4, R0
-00000C70: E1A05000    ;     MOV     R5, R0
-00000C74:             ; linked_list_find_loop       
-00000C74:             ;     ; List is empty 
-00000C74: E5946000    ;     LDR     R6, [R4, #pointer_next]
-00000C78: E3560000    ;     CMP     R6, #0 ; check if you reached end of line 
-00000C7C: 0A000009    ;     BEQ     linked_list_find_end_of_list
-00000C80: E5947004    ;     LDR     R7, [R4, #data]
-00000C84: E1570001    ;     CMP     R7, R1
-00000C88: 0A000003    ;     BEQ     linked_list_find_item_found
-00000C8C: E1A05004    ;     MOV     R5, R4
-00000C90: E1A04006    ;     MOV     R4, R6
-00000C94:             ;     ; check if item is desired item  
-00000C94: EAFFFFF6    ;     B       linked_list_find_loop   
-00000C98: E8BD81F0    ;     POP     {R4-R8, PC}   
-00000C9C:             ; 
-00000C9C:             ; linked_list_find_item_found
-00000C9C: E1A00004    ;     MOV     R0, R4
-00000CA0: E1A01005    ;     MOV     R1, R5
-00000CA4: E8BD81F0    ;     POP     {R4-R8, PC} 
-00000CA8:             ; 
-00000CA8:             ; linked_list_find_end_of_list
-00000CA8: E3A00000    ;     MOV R0, #0 
+00000BF8:             ;  ; if not retrieve word 
+00000BF8: E5141000    ;     LDR     R1, [R4]
+00000BFC:             ; 
+00000BFC:             ;     ; check if head is at bottom of buffer 
+00000BFC: E5906004    ;     LDR     R6, [R0, #buffer_end]
+00000C00: E1540006    ;     CMP     R4, R6 
+00000C04:             ;     ; if at bottom load buffer start address into register holding buffer head pointer 
+00000C04: 05904000    ;     LDREQ   R4, [R0, #buffer_start]
+00000C08: 12844004    ;     ADDNE   R4, R4, #&4
+00000C0C: E5804008    ;     STR     R4, [R0, #buffer_head]
+00000C10: E8BD8070    ;     POP     {R4-R6, PC}
+00000C14:             ; 
+00000C14:             ; 
+00000C14:             ; ; XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+00000C14:             ; buffer_empty 
+00000C14: EAFFFFFE    ; B buffer_empty
+00000C18:             ; 
+00000C18:             ; GET data_structures/process.s
+00000C18:             ; ; Data Structure called processes 
+00000C18:             ; struct 
+00000C18:             ; pointer_next           word 
+00000C18:             ; process_id             word 
+00000C18:             ; process_stack_pointer  word 
+00000C18:             ; process_constructor    word
+00000C18:             ;     struct_align
+00000C18:             ; 
+00000C18:             ; 
+00000C18:             ; 
+00000C18:             ; GET data_structures/linked_list.s
+00000C18:             ; ; Linked List data Structure 
+00000C18:             ; 
+00000C18:             ; struct 
+00000C18:             ; pointer_next    word 
+00000C18:             ; data            word  
+00000C18:             ;     struct_align
+00000C18:             ; 
+00000C18:             ; ; Functions 
+00000C18:             ; ; Add Item to list 
+00000C18:             ; linked_list_add
+00000C18:             ; ; Function for adding an item to the list
+00000C18:             ; ; Inputs 
+00000C18:             ; ;   R0 Address of start of list     
+00000C18: E92D4010    ;     PUSH    {R4, LR} 
+00000C1C:             ; linked_list_add_loop
+00000C1C: E5904000    ;     LDR     R4, [R0, #pointer_next]
+00000C20:             ;     ; See if its null 
+00000C20: E3540000    ;     CMP     R4, #&0 
+00000C24: 11A00004    ;     MOVNE   R0, R4 
+00000C28: 1AFFFFFB    ;     BNE     linked_list_add_loop
+00000C2C: E5841000    ;     STR     R1, [R4, #pointer_next]
+00000C30: E8BD8010    ;     POP     {R4, PC}
+00000C34:             ; 
+00000C34:             ; linked_list_get 
+00000C34:             ; ; Inputs
+00000C34:             ; ;   R0 pointer to linked list starting location   
+00000C34:             ; ; Outputs 
+00000C34:             ; ;   R1 pointer to first item ob list
+00000C34: E92D4010    ;     PUSH    {R4, LR}    
+00000C38: E5101000    ;     LDR     R1, [R0]
+00000C3C: E3510000    ;     CMP     R1, #&0 
+00000C40: 15914000    ;     LDRNE   R4, [R1, #pointer_next]
+00000C44: 15004000    ;     STRNE   R4, [R0]
+00000C48: 11A01004    ;     MOVNE   R1, R4
+00000C4C: E8BD8010    ;     POP     {R4, PC}
+00000C50:             ; 
+00000C50:             ; ; Remove Item to List 
+00000C50:             ; linked_list_remove 
+00000C50:             ; ; Input 
+00000C50:             ; ;   R1 value of data for item removed    
+00000C50:             ; ; Output 
+00000C50:             ; ;   R0 if 0 then it failed 
+00000C50: E92D4010    ;     PUSH    {R4, LR}
+00000C54: EB000006    ;     BL      linked_list_find 
+00000C58:             ;     ; check if item was found 
+00000C58: E3500000    ;     CMP R0, #0 
+00000C5C: 0A000003    ;     BEQ linked_list_remove_failed
+00000C60:             ;     ; update pointer #
+00000C60: E5904000    ;     LDR     R4, [R0, #pointer_next]
+00000C64: E5814000    ;     STR     R4, [R1, #pointer_next]
+00000C68:             ;     
+00000C68:             ;     ; Blanks pointer next of desired item 
+00000C68: E3A04000    ;     MOV     R4, #0 
+00000C6C: E5804000    ;     STR     R4, [R0, #pointer_next]
+00000C70:             ; linked_list_remove_failed
+00000C70: E8BD8010    ;     POP     {R4, PC}
+00000C74:             ; 
+00000C74:             ; 
+00000C74:             ; linked_list_find 
+00000C74:             ; ; Function find item by data 
+00000C74:             ; ; Input
+00000C74:             ; ; R0 Pointer to start of linked list  
+00000C74:             ; ; R1 Data of item function is looking for 
+00000C74:             ; ; Ouput
+00000C74:             ; ; R0 pointer to desired item 
+00000C74:             ; ; R1 Pointer to preseding Item 
+00000C74: E1A04000    ;     MOV     R4, R0
+00000C78: E1A05000    ;     MOV     R5, R0
+00000C7C:             ; linked_list_find_loop       
+00000C7C:             ;     ; List is empty 
+00000C7C: E5946000    ;     LDR     R6, [R4, #pointer_next]
+00000C80: E3560000    ;     CMP     R6, #0 ; check if you reached end of line 
+00000C84: 0A000009    ;     BEQ     linked_list_find_end_of_list
+00000C88: E5947004    ;     LDR     R7, [R4, #data]
+00000C8C: E1570001    ;     CMP     R7, R1
+00000C90: 0A000003    ;     BEQ     linked_list_find_item_found
+00000C94: E1A05004    ;     MOV     R5, R4
+00000C98: E1A04006    ;     MOV     R4, R6
+00000C9C:             ;     ; check if item is desired item  
+00000C9C: EAFFFFF6    ;     B       linked_list_find_loop   
+00000CA0: E8BD81F0    ;     POP     {R4-R8, PC}   
+00000CA4:             ; 
+00000CA4:             ; linked_list_find_item_found
+00000CA4: E1A00004    ;     MOV     R0, R4
+00000CA8: E1A01005    ;     MOV     R1, R5
 00000CAC: E8BD81F0    ;     POP     {R4-R8, PC} 
 00000CB0:             ; 
-00000CB0:             ; GET process_list.s
-00000CB0:             ; ; List of all Processes 
-00000CB0:             ; Terminal_Handler_Process
-00000CB0: 00000000    ;     DEFW 0 
-00000CB4: 00000001    ;     DEFW 1
+00000CB0:             ; linked_list_find_end_of_list
+00000CB0: E3A00000    ;     MOV R0, #0 
+00000CB4: E8BD81F0    ;     POP     {R4-R8, PC} 
+00000CB8:             ; 
+00000CB8:             ; GET process_list.s
+00000CB8:             ; ; List of all Processes 
+00000CB8:             ; Terminal_Handler_Process
 00000CB8: 00000000    ;     DEFW 0 
-00000CBC: 00000CC0    ;     DEFW Terminal_Handler_Constructor
-00000CC0:             ; 
-00000CC0:             ; Get user/user_main.s
-00000CC0:             ; ; File to make it easy to load all user files 
-00000CC0:             ; 
-00000CC0:             ; ; Terminal Handler 
-00000CC0:             ; GET Terminal_Handler.s
-00000CC0:             ; ; Terminal Handler Process 
-00000CC0:             ; ; This process handles intake from the terminal and determines how to respond
-00000CC0:             ; 
-00000CC0:             ; ;   Register Index 
-00000CC0:             ;     ; R10 is used to tell the process if it an echo input or not 1 is echo 0 is not echo 
-00000CC0:             ;     ; R11 is used to store address of RxD buffer start  
-00000CC0:             ;     ; R12 is used to store address of buffer start 
-00000CC0:             ; 
-00000CC0:             ; 
-00000CC0:             ; Terminal_Handler_Constructor
-00000CC0:             ; ; Constructor 
-00000CC0:             ;  ; Set up Stack pointer 
-00000CC0: E28FDF93    ;     ADRL    SP, Terminal_Handler_Stack_End
-00000CC4:             ; 
-00000CC4:             ;  ; Set up Buffer to store input from buffer 
-00000CC4: E28FCF92    ;     ADRL    R12, StandardIn_start
-00000CC8:             ;  ; Saves memeory address to process register 
-00000CC8: E1A0000C    ;     MOV     R0, R12
-00000CCC: E3A01040    ;     MOV     R1, #&40
-00000CD0: EF000B70    ;     SVC     buffer_initialise
-00000CD4:             ; 
-00000CD4:             ; ; Request that Interrupt for when something is received in RxD 
-00000CD4:             ;     ; Set up reciever interrupt 
-00000CD4: E3A00010    ;     MOV     R0, #Interrupt_Receiver
-00000CD8: EF000000    ;     SVC     Interrupt_Set_SVC
+00000CBC: 00000001    ;     DEFW 1
+00000CC0: 00000000    ;     DEFW 0 
+00000CC4: 00000CC8    ;     DEFW Terminal_Handler_Constructor
+00000CC8:             ; 
+00000CC8:             ; Get user/user_main.s
+00000CC8:             ; ; File to make it easy to load all user files 
+00000CC8:             ; 
+00000CC8:             ; ; Terminal Handler 
+00000CC8:             ; GET Terminal_Handler.s
+00000CC8:             ; ; Terminal Handler Process 
+00000CC8:             ; ; This process handles intake from the terminal and determines how to respond
+00000CC8:             ; 
+00000CC8:             ; ;   Register Index 
+00000CC8:             ;     ; R10 is used to tell the process if it an echo input or not 1 is echo 0 is not echo 
+00000CC8:             ;     ; R11 is used to store address of RxD buffer start  
+00000CC8:             ;     ; R12 is used to store address of buffer start 
+00000CC8:             ; 
+00000CC8:             ; 
+00000CC8:             ; Terminal_Handler_Constructor
+00000CC8:             ; ; Constructor 
+00000CC8:             ;  ; Set up Stack pointer 
+00000CC8: E28FDF93    ;     ADRL    SP, Terminal_Handler_Stack_End
+00000CCC:             ; 
+00000CCC:             ;  ; Set up Buffer to store input from buffer 
+00000CCC: E28FCF92    ;     ADRL    R12, StandardIn_start
+00000CD0:             ;  ; Saves memeory address to process register 
+00000CD0: E1A0000C    ;     MOV     R0, R12
+00000CD4: E3A01064    ;     MOV     R1, #StandardIn_Buffer_Size
+00000CD8: EBFFFFA5    ;     BL      buffer_initialise
 00000CDC:             ; 
-00000CDC:             ; 
-00000CDC:             ; ;
-00000CDC:             ; ; Main 
-00000CDC:             ;  ; Set up Constants 
-00000CDC: E24FBFF1    ;     ADRL     R11, Serial_RxD_Buffer_Address 
-00000CE0: E24BBB02    ; 
-00000CE4: E3A0A001    ;     MOV     R10, #1
-00000CE8:             ;     ;MOV     R10, #Terminal_Control
-00000CE8:             ;     ;MOV     R9, #Terminal_Data
-00000CE8:             ; 
-00000CE8:             ;  ;
-00000CE8:             ;  ; Second it needs to handler what happens when it is called 
-00000CE8:             ; Terminal_Handler_Main_Loop
-00000CE8:             ;   ; Requests control of RxD and TxD 
-00000CE8:             ;   ; XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-00000CE8:             ;   ; 
-00000CE8:             ;   ; Check if there is anything in the RxD Buffer 
-00000CE8: E1A0000B    ;     MOV     R0, R11 
-00000CEC: EBFFFFBA    ;     BL      buffer_get
-00000CF0: E3500000    ;     CMP     R0, #&0
-00000CF4: 0AFFFFFB    ;     BEQ     Terminal_Handler_Main_Loop
-00000CF8:             ; 
-00000CF8:             ;   ;
-00000CF8:             ;   ; Check if in protected mode 
-00000CF8: E3580001    ;     CMP     R8, #1
-00000CFC: 0B000001    ;     BLEQ     Transmit 
+00000CDC:             ; ; Request that Interrupt for when something is received in RxD 
+00000CDC:             ;     ; Set up reciever interrupt 
+00000CDC: E3A00010    ;     MOV     R0, #Interrupt_Receiver
+00000CE0: EF000000    ;     SVC     Interrupt_Set_SVC
+00000CE4:             ; 
+00000CE4:             ; 
+00000CE4:             ; ;
+00000CE4:             ; ; Main 
+00000CE4:             ;  ; Set up Constants 
+00000CE4: E24FBFF2    ;     ADRL     R11, Serial_RxD_Buffer_Address 
+00000CE8: E24BBB02    ; 
+00000CEC: E3A0A001    ;     MOV     R10, #1
+00000CF0:             ;     ;MOV     R10, #Terminal_Control
+00000CF0:             ;     ;MOV     R9, #Terminal_Data
+00000CF0:             ; 
+00000CF0:             ;  ;
+00000CF0:             ;  ; Second it needs to handler what happens when it is called 
+00000CF0:             ; Terminal_Handler_Main_Loop
+00000CF0:             ;   ; Requests control of RxD and TxD 
+00000CF0:             ;   ; XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+00000CF0:             ;   ; 
+00000CF0:             ;   ; Check if there is anything in the RxD Buffer 
+00000CF0: E1A0000B    ;     MOV     R0, R11 
+00000CF4: EBFFFFB9    ;     BL      buffer_get
+00000CF8: E3500000    ;     CMP     R0, #&0
+00000CFC: 0AFFFFFB    ;     BEQ     Terminal_Handler_Main_Loop
+00000D00:             ; 
 00000D00:             ;   ;
-00000D00:             ;   ; Check if the input is an Enter
-00000D00: E350000A    ;     CMP     R0, #&A
-00000D04: 0AFFFFFF    ;     BEQ     Terminal_Handler_Commands
-00000D08:             ;     ;   if it is an enter check if it is a known command 
-00000D08:             ;         ; Checks if it has recieved a input from the serie line 
-00000D08:             ; 
-00000D08:             ;     ; Checks to see what the input is and if it shoudl do anyting 
-00000D08:             ;     ;   if it is enter it checks what it needs to do 
-00000D08:             ;     ; Places input into StandardIn Buffer 
-00000D08:             ;     ; Checks to see if it is in echo to terminal mode or not 
-00000D08:             ;     ;   If it is it send it to TxD Buffer 
-00000D08:             ; 
-00000D08:             ; Transmit 
-00000D08:             ; ; This function is responsible for transmitting 
-00000D08:             ; 
-00000D08:             ; Terminal_Handler_Commands
-00000D08:             ;     ; This function will check input against commands 
-00000D08:             ; 
-00000D08:             ; Terminal_Handler_Commands_Table 
-00000D08: 00000D0C    ;                                 DEFW Command_Echo
-00000D0C:             ; Terminal_Handler_Commands_Table_End
-00000D0C:             ; 
-00000D0C: 65 63 68 6F ; Command_Echo DEFB "echo",0
-00000D10: 00          ; 
-00000D11:             ; 
-00000D11:             ; 
-00000D11:             ; ; Temp permanent memeory for user processes 
-00000D11:             ; GET user_memory.s
-00000D11:             ; 
-00000D11:             ; ; variable for different stacks 
-00000D11:             ; Terminal_Handler_Stack_Size EQU &200
-00000D14:             ;     Align 
-00000D14:             ; StandardIn_Buffer_Size      EQU &64
-00000D14:             ;     Align
-00000D14:             ;         ; Terminal Handler Stack 
-00000D14:             ;         
-00000D14:             ;         Terminal_Handler_Stack_Start   DEFS Terminal_Handler_Stack_Size ; Terminal_Handler Stac
+00000D00:             ;   ; Check if in protected mode 
+00000D00: E3580001    ;     CMP     R8, #1
+00000D04: 0B000001    ;     BLEQ     Transmit 
+00000D08:             ;   ;
+00000D08:             ;   ; Check if the input is an Enter
+00000D08: E350000A    ;     CMP     R0, #&A
+00000D0C: 0AFFFFFF    ;     BEQ     Terminal_Handler_Commands
+00000D10:             ;     ;   if it is an enter check if it is a known command 
+00000D10:             ;         ; Checks if it has recieved a input from the serie line 
+00000D10:             ; 
+00000D10:             ;     ; Checks to see what the input is and if it shoudl do anyting 
+00000D10:             ;     ;   if it is enter it checks what it needs to do 
+00000D10:             ;     ; Places input into StandardIn Buffer 
+00000D10:             ;     ; Checks to see if it is in echo to terminal mode or not 
+00000D10:             ;     ;   If it is it send it to TxD Buffer 
+00000D10:             ; 
+00000D10:             ; Transmit 
+00000D10:             ; ; This function is responsible for transmitting 
+00000D10:             ; 
+00000D10:             ; Terminal_Handler_Commands
+00000D10:             ;     ; This function will check input against commands 
+00000D10:             ; 
+00000D10:             ; Terminal_Handler_Commands_Table 
+00000D10: 00000D14    ;                                 DEFW Command_Echo
+00000D14:             ; Terminal_Handler_Commands_Table_End
+00000D14:             ; 
+00000D14: 65 63 68 6F ; Command_Echo DEFB "echo",0
+00000D18: 00          ; 
+00000D19:             ; 
+00000D19:             ; 
+00000D19:             ; ; Temp permanent memeory for user processes 
+00000D19:             ; GET user_memory.s
+00000D19:             ; 
+00000D19:             ; ; variable for different stacks 
+00000D19:             ; Terminal_Handler_Stack_Size EQU &200
+00000D1C:             ;     Align 
+00000D1C:             ; StandardIn_Buffer_Size      EQU &64
+00000D1C:             ;     Align
+00000D1C:             ;         ; Terminal Handler Stack 
+00000D1C:             ;         
+00000D1C:             ;         Terminal_Handler_Stack_Start   DEFS Terminal_Handler_Stack_Size ; Terminal_Handler Stac
                       ; k
-00000F14:             ;         Terminal_Handler_Stack_End
-00000F14:             ;              Align
-00000F14:             ; 
-00000F14:             ;         StandardIn_start DEFS StandardIn_Buffer_Size
-00000F78:             ;         StandardIn_End 
-00000F78:             ;             Align 
+00000F1C:             ;         Terminal_Handler_Stack_End
+00000F1C:             ;              Align
+00000F1C:             ; 
+00000F1C:             ;         StandardIn_start DEFS StandardIn_Buffer_Size
+00000F80:             ;         StandardIn_End 
+00000F80:             ;             Align 
+00000F80:             ; 
+00000F80:             ; GET     RAM_Space.s
+00000F80:             ; ; This fule holds the RAM Space.
+00000F80:             ; RAM_Size        EQU &2000  
+00000F80:             ; DEFS    RAM_Size
 
 Symbol Table: Labels
 : Undefined_Instruction             00000004  Local -- ARM
@@ -647,42 +664,44 @@ Symbol Table: Labels
 : SVC_Jump_Table_place_holder       00000054  Local -- ARM
 : SVC_Out_Of_Bounds                 00000054  Local -- ARM
 : IRQ_Handler                       00000058  Local -- ARM
-: IRQ_RxD                           00000070  Local -- ARM
-: kernal_Initialise                 00000098  Local -- ARM
+: IRQ_RxD                           00000074  Local -- ARM
+: kernal_Initialise                 0000009C  Local -- ARM
 : IRQ_Mode                          00000012  Value
 : Super_Mode                        00000013  Value
 : System_Mode_Bit_Mask              0000001F  Value
+: User_Mode_With_Int                00000050  Value
 : Interrupt_Receiver                00000010  Value
 : Interrupt_Transmit                00000020  Value
 : Interrupt_Alert_Offset            00000018  Value
 : Port_Area                         10000000  Value
 : Interrupt_Active_Offset           0000001C  Value
-: Serial_RxD_Buffer_Address         00000120  Local -- ARM
-: Serial_TxD_Buffer_Address         00000138  Local -- ARM
-: current_process                   0000013C  Local -- ARM
-: sheduler_ready_list_start         00000140  Local -- ARM
+: Serial_RxD_Buffer_Address         00000124  Local -- ARM
+: Serial_TxD_Buffer_Address         0000013C  Local -- ARM
+: current_process                   00000140  Local -- ARM
+: sheduler_ready_list_start         00000144  Local -- ARM
 : Supervisor_Stack_Size             00000256  Value
 : Interrupt_Stack_Size              00000256  Value
-: Supervisor_Stack_Start            00000144  Local -- ARM
-: Supervisor_Stack_End              0000039A  Local -- ARM
-: Interrupt_Stack_Start             0000039C  Local -- ARM
-: Interrupt_Stack_End               000005F2  Local -- ARM
+: Supervisor_Stack_Start            00000148  Local -- ARM
+: Supervisor_Stack_End              0000039E  Local -- ARM
+: Interrupt_Stack_Start             000003A0  Local -- ARM
+: Interrupt_Stack_End               000005F6  Local -- ARM
 : Serial_RxD_Buffer_Size            00000256  Value
 : Serial_TxD_Buffer_Size            00000256  Value
-: Serial_RxD_Buffer_Start           000005F4  Local -- ARM
-: Serial_RxD_Buffer_End             0000084A  Local -- ARM
-: Serial_TxD_Buffer_Start           0000084C  Local -- ARM
-: Serial_TxD_Buffer_End             00000AA2  Local -- ARM
-: Interrupt_Set                     00000AA4  Local -- ARM
-: Interrupt_Off                     00000AB8  Local -- ARM
-: Transmit_word                     00000ACC  Local -- ARM
-: Transmit_word_send                00000B00  Local -- ARM
-: Context_Switch                    00000B0C  Local -- ARM
-: Context_Switch_Store_Return       00000B10  Local -- ARM
-: Context_Store                     00000B40  Local -- ARM
-: Context_Load                      00000B5C  Local -- ARM
+: Serial_RxD_Buffer_Start           000005F8  Local -- ARM
+: Serial_RxD_Buffer_End             0000084E  Local -- ARM
+: Serial_TxD_Buffer_Start           00000850  Local -- ARM
+: Serial_TxD_Buffer_End             00000AA6  Local -- ARM
+: Interrupt_Set                     00000AA8  Local -- ARM
+: Interrupt_Off                     00000ABC  Local -- ARM
+: Transmit_word                     00000AD0  Local -- ARM
+: Transmit_word_send                00000B04  Local -- ARM
+: Context_Switch                    00000B10  Local -- ARM
+: Context_Switch_Store_Return       00000B14  Local -- ARM
+: Context_Store                     00000B44  Local -- ARM
+: Context_Load                      00000B60  Local -- ARM
 : Interrupt_Set_SVC                 00000000  Value
 : Interrupt_Off_SVC                 00000004  Value
+: Word_Size                         00000004  Value
 : Terminal_Data                     00000010  Value
 : Terminal_Control                  00000014  Value
 : buffer_start                      00000000  Offset
@@ -690,36 +709,38 @@ Symbol Table: Labels
 : buffer_head                       00000008  Offset
 : buffer_tail                       0000000C  Offset
 : buffer_waiter                     00000010  Offset
-: buffer_initialise                 00000B70  Local -- ARM
-: buffer_put                        00000B94  Local -- ARM
-: buffer_full                       00000BD8  Local -- ARM
-: buffer_get                        00000BDC  Local -- ARM
-: buffer_empty                      00000C0C  Local -- ARM
+: buffer_data                       00000014  Offset
+: buffer_initialise                 00000B74  Local -- ARM
+: buffer_put                        00000B98  Local -- ARM
+: buffer_full                       00000BDC  Local -- ARM
+: buffer_get                        00000BE0  Local -- ARM
+: buffer_empty                      00000C14  Local -- ARM
 : pointer_next                      00000000  Offset
 : process_id                        00000004  Offset
 : process_stack_pointer             00000008  Offset
 : process_constructor               0000000C  Offset
 : data                              00000004  Offset
-: linked_list_add                   00000C10  Local -- ARM
-: linked_list_add_loop              00000C14  Local -- ARM
-: linked_list_get                   00000C2C  Local -- ARM
-: linked_list_remove                00000C48  Local -- ARM
-: linked_list_remove_failed         00000C68  Local -- ARM
-: linked_list_find                  00000C6C  Local -- ARM
-: linked_list_find_loop             00000C74  Local -- ARM
-: linked_list_find_item_found       00000C9C  Local -- ARM
-: linked_list_find_end_of_list      00000CA8  Local -- ARM
-: Terminal_Handler_Process          00000CB0  Local -- ARM
-: Terminal_Handler_Constructor      00000CC0  Local -- ARM
-: Terminal_Handler_Main_Loop        00000CE8  Local -- ARM
-: Transmit                          00000D08  Local -- ARM
-: Terminal_Handler_Commands         00000D08  Local -- ARM
-: Terminal_Handler_Commands_Table   00000D08  Local -- ARM
-: Terminal_Handler_Commands_Table_  00000D0C  Local -- ARM
-: Command_Echo                      00000D0C  Local -- ARM
+: linked_list_add                   00000C18  Local -- ARM
+: linked_list_add_loop              00000C1C  Local -- ARM
+: linked_list_get                   00000C34  Local -- ARM
+: linked_list_remove                00000C50  Local -- ARM
+: linked_list_remove_failed         00000C70  Local -- ARM
+: linked_list_find                  00000C74  Local -- ARM
+: linked_list_find_loop             00000C7C  Local -- ARM
+: linked_list_find_item_found       00000CA4  Local -- ARM
+: linked_list_find_end_of_list      00000CB0  Local -- ARM
+: Terminal_Handler_Process          00000CB8  Local -- ARM
+: Terminal_Handler_Constructor      00000CC8  Local -- ARM
+: Terminal_Handler_Main_Loop        00000CF0  Local -- ARM
+: Transmit                          00000D10  Local -- ARM
+: Terminal_Handler_Commands         00000D10  Local -- ARM
+: Terminal_Handler_Commands_Table   00000D10  Local -- ARM
+: Terminal_Handler_Commands_Table_  00000D14  Local -- ARM
+: Command_Echo                      00000D14  Local -- ARM
 : Terminal_Handler_Stack_Size       00000200  Value
 : StandardIn_Buffer_Size            00000064  Value
-: Terminal_Handler_Stack_Start      00000D14  Local -- ARM
-: Terminal_Handler_Stack_End        00000F14  Local -- ARM
-: StandardIn_start                  00000F14  Local -- ARM
-: StandardIn_End                    00000F78  Local -- ARM
+: Terminal_Handler_Stack_Start      00000D1C  Local -- ARM
+: Terminal_Handler_Stack_End        00000F1C  Local -- ARM
+: StandardIn_start                  00000F1C  Local -- ARM
+: StandardIn_End                    00000F80  Local -- ARM
+: RAM_Size                          00002000  Value

@@ -10,6 +10,7 @@ Interrupt_Off_SVC       EQU &4
 ;EQU &10
 ;EQU &14
 
+Word_Size           EQU &4
 
 Terminal_Data 		EQU &10
 Terminal_Control	EQU &14

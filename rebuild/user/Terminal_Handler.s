@@ -16,8 +16,8 @@ Terminal_Handler_Constructor
     ADRL    R12, StandardIn_start
  ; Saves memeory address to process register 
     MOV     R0, R12
-    MOV     R1, #&40
-    SVC     buffer_initialise
+    MOV     R1, #StandardIn_Buffer_Size
+    BL      buffer_initialise
 
 ; Request that Interrupt for when something is received in RxD 
     ; Set up reciever interrupt 

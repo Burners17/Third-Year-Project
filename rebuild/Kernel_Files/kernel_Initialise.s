@@ -21,13 +21,10 @@ kernal_Initialise
     ADRL    R1, Serial_RxD_Buffer_Address
     STR     R0, [R1]
     ; Initialise the buffer 
-    MOV     R1, #&40
+    ADRL    R1, Serial_RxD_Buffer_Size
+    LDR     R1, [R1]
     BL      buffer_initialise
-    MOV     R1, #5
-    BL      buffer_put
-    MOV     R1, #0 
-    BL      buffer_get        
-    
+
   ; TxD Interrupt 
    ; Buffer it uses
     ; Get address of buffer and store it in a know variable 
@@ -35,8 +32,9 @@ kernal_Initialise
     ADRL    R1, Serial_TxD_Buffer_Address
     STR     R0, [R1]
     ; Initialise the buffer 
-    MOV       R1, #&40
-    BL        buffer_initialise   
+    ADRL    R1, Serial_TxD_Buffer_Size
+    LDR     R1, [R1]
+    BL      buffer_initialise   
   ; 
   ; Timer Interrupt 
   ; NA 
@@ -57,9 +55,10 @@ kernal_Initialise
     MSR     CPSR_c, R0                    ; Updates the CPSR
  ;
 ;
-; Initialise first process which is always terminal handler 
+; Initialise first user process which is always terminal handler 
    ADRL     R0, Terminal_Handler_Process
    LDR      R14, [R0, #process_constructor]
-   MOV      R0, #&50
-   MSR      SPSR, R0 
+   ; No need to preserve flags so this makes it easier
+   MOV      R0, #User_Mode_With_Int
+   MSR      SPSR_c, R0 
    MOVS     PC, R14 

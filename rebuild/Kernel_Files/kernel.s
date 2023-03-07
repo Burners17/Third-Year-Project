@@ -14,19 +14,19 @@ Fast_Interrupt_Request B Fast_Interrupt_Request ; If a Fast Interrupt occurs, PC
 Initialise_Program
 B kernal_Initialise
 
-GET     kernal_SVC_Handler.s
-GET     kernal_IRQ_Handler.s
+GET     kernel_SVC_Handler.s
+GET     kernel_IRQ_Handler.s
 
 ; Loads the Kernal_Initialise code 
-GET     kernal_Initialise.s
+GET     kernel_Initialise.s
 
 ; Loads Kernal Constants 
-GET     kernal_constants.s 
+GET     kernel_constants.s 
 
 ; Loads Kernal Variables 
-GET     kernal_variables.s
+GET     kernel_variables.s
 
 ; Loads kernal predefined memeory 
-GET     kernal_memory.s
+GET     kernel_memory.s
 
-GET     Kernal_Subroutines/Subroutines_main.s 
+GET     Kernel_Subroutines/Subroutines_main.s 

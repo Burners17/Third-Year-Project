@@ -7,6 +7,7 @@ buffer_end      word
 buffer_head     word
 buffer_tail     word 
 buffer_waiter   word
+buffer_data     alias
     struct_align  
 
 ; Functions 
@@ -39,7 +40,7 @@ buffer_put
     LDR     R5, [R0, #buffer_tail] 
 ;   Check if buffer is full 
 ;       Check if head is 1 word infront of tail 
-    ADD     R6, R5, #&4
+    ADD     R6, R5, #buffer_data
     CMP     R6, R4
     BEQ     buffer_full
 ;       check if tail is at bottom of buffer and if so if tail is at base 
@@ -55,7 +56,7 @@ buffer_put
     CMP     R6, R5 
     LDREQ   R5, [R0, #buffer_start] ; 
     ; else add 4 
-    ADDNE   R5, R5, #&4
+    ADDNE   R5, R5, #Word_Size
     ; and save new tail pointer address 
     STR     R5, [R0, #buffer_tail]
     POP     {R4-R7, PC}
@@ -78,6 +79,8 @@ buffer_get
     CMP     R4, R5 
     BEQ     buffer_empty 
 
+    ; done here because loads can take time so reduces possible delay 
+    LDR     R6, [R0, #buffer_end]
  ; if not retrieve word 
     LDR     R1, [R4]
 

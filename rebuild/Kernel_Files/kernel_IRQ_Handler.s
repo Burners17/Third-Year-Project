@@ -12,6 +12,9 @@ IRQ_Handler
     TST R5, #&10
     BLNE IRQ_RxD
 
+; Return to were interrupt occured 
+    LDMFD SP!, {R0-R5, PC}^
+
 IRQ_RxD ; interrupt from serial receiver 
     PUSH    {R0-R3, LR} 
     MOV     R3, #Terminal_Data
