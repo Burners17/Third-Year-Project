@@ -34,6 +34,8 @@ buffer_put
 ; Inputs 
 ;   R0 Address of where the buffer starts 
 ;   R1 Word to store 
+; OutPuts 
+;   R0 - Returns 0 when it is full 
 
     PUSH    {R4-R7, LR}
     LDR     R4, [R0, #buffer_head]
@@ -63,14 +65,15 @@ buffer_put
 
 ;XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 buffer_full
-B buffer_full
+    MOV     R0, #0 
+    POP     {R4-R6, PC}
 
 buffer_get 
 ; This function retrieves a word from the buffer 
 ; Inputs 
 ;   R0 Address of where the buffer starts 
 ; Outputs 
-;   R1 Word retrieved 
+;   R1 Word retrieved, 0 when empty
     PUSH    {R4-R6, LR}
     LDR     R4, [R0, #buffer_head]
     LDR     R5, [R0, #buffer_tail]  
@@ -96,4 +99,5 @@ buffer_get
 
 ; XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 buffer_empty 
-B buffer_empty
+    MOV     R1, #0 
+    POP     {R4-R6, PC}

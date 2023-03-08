@@ -9,6 +9,6 @@ malloc
     ; Check if a list of free memeory was provided 
     MOV R4, #0 
     CMP R0, R4 
-    BEQ 
+    ;BEQ 
 
     POP     {R4-R8, PC}

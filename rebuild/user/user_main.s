@@ -5,3 +5,5 @@ GET Terminal_Handler.s
 
 ; Temp permanent memeory for user processes 
 GET user_memory.s
+
+GET Idle.s
