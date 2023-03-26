@@ -74,12 +74,14 @@ printChar_Status
 
 Reserve_LCD
     ADRL    R4, LCD_Owner
+    LDR     R4, [R4]
     ADRL    R5, current_process
+    LDR     R5, [R5]
     STR     R5, [R4]
     B printChar_Status
-B Reserve_LCD
 
-LCDInUse B LCDInUse
+
+LCDInUse
     MOV     R2, #1 
     POP     {R4,R5, LR}
 

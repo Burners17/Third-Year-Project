@@ -8,6 +8,8 @@ User_Mode_With_Int          EQU &50
 ; SVC call Constants 
 Print_String_SVC            EQU &0 
 Release_LCD_SVC             EQU &4
+LED_SVC                     EQU &8 
+
 
 Port_Area                   EQU &10000000
 Port_A                      EQU &0 
@@ -18,7 +20,7 @@ RS_Bit                      EQU 0B0000_0010
 RW_Bit                      EQU 0B0000_0100
 E_En                        EQU 0B0000_0001
 LCD_Ready_Status            EQU 0B1000_0000
-
+LED_On                      EQU 0B0000_1000
 
 ; Interrupt bits 
 Interrupt_Receiver          EQU 0b0001_0000
