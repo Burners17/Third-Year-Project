@@ -10,8 +10,8 @@ SVC_Handler PUSH  {R4-R5, LR}
             MOVS  PC, LR              ; Restores CSPR code and moves PC to call address
 
 SVC_Jump_Table_Size EQU SVC_Jump_Table_End - SVC_Jump_Table
-SVC_Jump_Table      DEFW Interrupt_Set
-                    DEFW Interrupt_Off
+SVC_Jump_Table      DEFW SVC_printChar
+                    DEFW Release_LCD_Ownership
                     ;DEFW Initialise_Process
                     ;DEFW Initialise_Process_Return
 SVC_Jump_Table_End

@@ -5,14 +5,26 @@ Super_Mode                  EQU &13         ; Supervisor Mode
 System_Mode_Bit_Mask        EQU &1F ; Used to clear the are that determines system mode
 User_Mode_With_Int          EQU &50
 
-Interrupt_Alert_Offset      EQU &18
+; SVC call Constants 
+Print_String_SVC            EQU &0 
+Release_LCD_SVC             EQU &4
+
 Port_Area                   EQU &10000000
+Port_A                      EQU &0 
+Port_B                      EQU &4
+
+; LCD constants 
+RS_Bit                      EQU 0B0000_0010
+RW_Bit                      EQU 0B0000_0100
+E_En                        EQU 0B0000_0001
+LCD_Ready_Status            EQU 0B1000_0000
 
 
 ; Interrupt bits 
 Interrupt_Receiver          EQU 0b0001_0000
 Interrupt_Transmit          EQU 0b0010_0000
 Interrupt_Active_Offset     EQU &1C
+Interrupt_Alert_Offset      EQU &18
 Interrupt_Timer_Offset      EQU &0C ; This location holds the value at which the Interrupt will trigger when the timer reaches
 
 Interrupt_Time_Interval     EQU &64 ; time gap for interrupts to occur
