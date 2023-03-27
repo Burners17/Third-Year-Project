@@ -27,13 +27,12 @@ Set_LED_Main
     ; update LEDS 
     LDR     R6, [R4]
     AND     R6, R6, R0 
-    XOR     R6, R6, R1
-    STR     R6, [R4]
+    EOR     R6, R6, R1
+    STR     R6, [R4, #Port_A]
     POP     {R4, R5, R6, PC}
 
 Reserve_LED
     ADRL    R4, LCD_Owner
-    LDR     R4, [R4]
     ADRL    R5, current_process
     LDR     R5, [R5]
     STR     R5, [R4]

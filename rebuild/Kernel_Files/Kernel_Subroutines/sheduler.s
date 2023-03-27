@@ -7,7 +7,8 @@
     ; check current process 
     ADRL    R0, current_process  
     LDR     R0, [R0]
-    CMP     R0, #Idle_Handler 
+    CMP     R0, #0
+    MOVEQS    PC, LR
 
 
 

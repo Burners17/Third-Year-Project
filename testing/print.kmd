@@ -1,0 +1,187 @@
+KMD
+00000000:             ; ; rewrote the controls to make them come back to the master routine and added clear screen 
+00000000:             ; 
+00000000:             ; ; R0 -R3 Argument values passed to a subroutine and results returned from a subroutine
+00000000:             ; ; R4 - R11 Local Variables
+00000000:             ; ; R12 - unknown purpose
+00000000:             ; ; R13 - Stack pointer
+00000000:             ; ; R14 Link register
+00000000:             ; ; R15 is program
+00000000:             ; 
+00000000:             ; ; States
+00000000:             ; ; state 1  - this is the waiting state that waits for the LCD to be ready so no
+00000000:             ; ;            characters are skipped
+00000000:             ; 
+00000000:             ; 
+00000000:             ; ; defined constants
+00000000:             ; Port_Area   EQU &10000000
+00000000:             ; Port_A      EQU &0
+00000000:             ; Port_B      EQU &4
+00000000:             ; Led_Dis     EQU 0B1110_1111 ; Use AND to apply this
+00000000:             ; E_En        EQU 0B0000_0001 ; Use OR to apply this
+00000000:             ; LCD_status  EQU 0B1000_0000 ; Use AND to isolate the LCD status Bye
+00000000:             ; 
+00000000:             ; ; branch to avoid unknown instruction for cpu
+00000000: EA000003    ;             B main
+00000004:             ; 
+00000004:             ; ; string
+00000004: 48 65 6C 6C ; string      DEFB  'Hello World!',0
+00000008: 6F 20 57 6F ; 
+0000000C: 72 6C 64 21 ; 
+00000010: 00          ; 
+00000014:             ;             align
+00000014:             ; 
+00000014:             ; main
+00000014: E3A00201    ;             MOV R0, #Port_Area  ; defines port area to be used by the program
+00000018: E28FDF4F    ;             ADR SP, stack_end   ; sets up the stack pointer to be used
+0000001C: EB000003    ;             BL dis_LED          ; disables LEDs on the board
+00000020:             ; 
+00000020: EB000006    ;             BL clear_LCD        ; clears LCD
+00000024: E24F1028    ;             ADR R1, string      ; loads the address of the string to be printed into R1
+00000028: EB00000B    ;             BL printString      ; Print string at address loaded into R1
+0000002C: EA00002F    ;             B End               ; End point of program, send it into infinite loop
+00000030:             ; 
+00000030:             ; dis_LED     ; disable LEDs
+00000030: E5D04004    ;             LDRB R4, [R0, #Port_B] ; disable LEDs
+00000034: E20440EF    ;             AND R4, R4, #Led_Dis
+00000038: E5C04004    ;             STRB R4, [R0, #Port_B]
+0000003C: E1A0F00E    ;             MOV PC, LR
+00000040:             ; 
+00000040:             ; 
+00000040:             ; clear_LCD   ; this is to clear the current from the screen
+00000040:             ;             ; Register bank
+00000040:             ;             ; R0  passes the port area into the sub routines of the print loop
+00000040:             ;             ; R2  passed the character to be printed from printLoop to sub-subroutine print
+00000040:             ;             ; R7 Temporarily used to hold the LR in printString while i get stack to work
+00000040: E1A0700E    ;             MOV R7, LR
+00000044:             ;             ; set ports to send to control registers
+00000044: E5D05004    ;             LDRB R5, [R0, #Port_B]    ; loads current value of port B into R5
+00000048: E20550F9    ;             AND R5, R5, #0B1111_1001  ; this sets R/W and RS low
+0000004C: E5C05004    ;             STRB R5, [R0, #Port_B]    ; send instruction to LCD
+00000050: E3A02001    ;             MOV R2, #&01
+00000054: EB00001D    ;             BL clear
+00000058: E1A0F007    ;             MOV PC, R7
+0000005C:             ; 
+0000005C:             ; 
+0000005C:             ; printString ; this is the control logic for the printing characters
+0000005C:             ;             ; Register bank
+0000005C:             ;             ; R0  passes the port area into the sub routines of the print loop
+0000005C:             ;             ; R1  passed the address of the string to be printed to the printString subroutine
+0000005C:             ;             ; R2  passed the character to be printed from printLoop to sub-subroutine print
+0000005C:             ; 
+0000005C:             ;             ; R4  used as a pointer to character to be printed in string
+0000005C:             ;             ; R7 Temporarily used to hold the LR in printString while i get stack to work
+0000005C:             ; 
+0000005C:             ;             ; saves Registers that could be changed
+0000005C:             ;             ;PUSH {R14}
+0000005C: E1A0700E    ;             MOV R7, LR ; quick and dirty way of saving the LR
+00000060:             ;             ; setting variables to be used by subroutine
+00000060: E3A04000    ;             MOV R4, #0        ; sets string character pointer to 0
+00000064:             ; 
+00000064:             ;             ; execute code
+00000064: E7D12004    ; printLoop   LDRB R2, [R1, R4] ; loads the next character into the string
+00000068: E2844001    ;             ADD R4, R4, #1    ; increments R4, character pointer by one
+0000006C: E3520000    ;             CMP R2, #0        ; this check if the end of the string has been reached
+00000070:             ; 
+00000070: 0A000002    ;             BEQ PS_finished
+00000074:             ;             ;LDMEQFD SP, {PC}  ; printing is finished and will now return to where it was calle
+                      ; d
+00000074: EB000002    ;             BL wait           ; call the wait sub-routine
+00000078: EB000010    ;             BL print          ; call the print sub-routine
+0000007C: EAFFFFF8    ;             B printLoop       ; returns to the top of the execute code for PS
+00000080:             ; 
+00000080:             ; PS_finished
+00000080:             ;             ;POP {PC}
+00000080: 01A0F007    ;             MOVEQ PC, R7
+00000084:             ; 
+00000084:             ; 
+00000084:             ; wait ; the waiting state for the LCD to be ready for the next char
+00000084:             ;             ; Register bank
+00000084:             ;             ; R0  passes the port area into the sub routines of the print loop
+00000084:             ;             ; R5  used to LD value of Port_B and then manipulate it and ST it back
+00000084:             ;             ; R6  used to LD value of Port_A for use by routine
+00000084:             ; 
+00000084:             ;             ; step 1 set controls
+00000084: E5D05004    ;             LDRB R5, [R0, #Port_B]    ; loads current value of port B into R5
+00000088: E20550FD    ;             AND R5, R5, #0B1111_1101  ; this sets RS low
+0000008C: E3855004    ;             ORR R5, R5, #0B0000_0100  ; this sets R/W high
+00000090: E5C05004    ;             STRB R5, [R0, #Port_B]    ; this send the changed signals back to the LCD to change
+                      ;  its behaviour
+00000094:             ; 
+00000094:             ;             ; step 2 enable bus
+00000094: E5D05004    ; step2       LDRB R5, [R0, #Port_B]    ; loads current value of port B into R5
+00000098: E3855001    ;             ORR R5, R5, #E_En         ; sets E high therefore interface active
+0000009C: E5C05004    ;             STRB R5, [R0, #Port_B]    ; sends instruction to LCD Port B
+000000A0:             ; 
+000000A0:             ;             ; step 3 read LCD status
+000000A0: E5D06000    ;             LDRB R6, [R0, #Port_A]    ; loads value of Port A to R6
+000000A4: E2066080    ;             AND R6, R6, #LCD_status   ; strips all but the LCD status byte
+000000A8:             ; 
+000000A8:             ;             ; step 4 disable bus
+000000A8: E5D05004    ;             LDRB R5, [R0, #Port_B]    ; loads current value of port B into R5
+000000AC: E3C55001    ;             BIC R5, R5, #E_En         ; sets E low therefore Interface inactive
+000000B0: E5C05004    ;             STRB R5, [R0, #Port_B]    ; sends instruction to LCD Port B
+000000B4:             ; 
+000000B4:             ;             ; step 5 check status of LCD and take appropriate action
+000000B4: E3560000    ;             CMP R6, #0                ; checks if R6 is 0 and therefore LCD is idle
+000000B8: 01A0F00E    ;             MOVEQ PC, LR              ; return if LCD is idle to where it was called
+000000BC: EAFFFFF4    ;             B step2                   ; else repeat from step 2 until LCD is idle
+000000C0:             ; 
+000000C0:             ; print       ; Write a character to the LCD
+000000C0:             ;             ; Register bank
+000000C0:             ;             ; R0  passes the port area into the sub routines of the print loop
+000000C0:             ;             ; R2  character to be printed by routine passed by printString routine
+000000C0:             ;             ; R5  used to LD value of Port_B and then manipulate it and ST it back
+000000C0:             ; 
+000000C0:             ;             ; step 6, set to write data
+000000C0: E5D05004    ;             LDRB R5, [R0, #Port_B]    ; loads current value of port B into R5
+000000C4: E20550FB    ;             AND R5, R5, #0B1111_1011  ; this sets R/W low
+000000C8: E3855002    ;             ORR R5, R5, #0B0000_0010  ; this sets RS high
+000000CC: E5C05004    ;             STRB R5, [R0, #Port_B]    ; send instruction to LCD
+000000D0:             ; 
+000000D0:             ; clear       ; step 7 Output desired byte onto data bus, Port A
+000000D0:             ; 
+000000D0: E5C02000    ;             STRB R2, [R0, #Port_A]    ; send character to LCD
+000000D4:             ; 
+000000D4:             ;             ; step 8 enable - copy of step 2
+000000D4: E5D05004    ;             LDRB R5, [R0, #Port_B]    ; loads current value of port B into R5
+000000D8: E3855001    ;             ORR R5, R5, #E_En         ; sets E high therefore interface active
+000000DC: E5C05004    ;             STRB R5, [R0, #Port_B]    ; sends instruction to LCD Port B
+000000E0:             ; 
+000000E0:             ;             ; step 9 disable bus - copy  of step 4
+000000E0: E5D05004    ;             LDRB R5, [R0, #Port_B]    ; loads current value of port B into R5
+000000E4: E3C55001    ;             BIC R5, R5, #E_En         ; sets E low therefore Interface inactive
+000000E8: E5C05004    ;             STRB R5, [R0, #Port_B]    ; sends instruction to LCD Port B
+000000EC:             ; 
+000000EC: E1A0F00E    ;             MOV PC, LR ; return to where print was called
+000000F0:             ; 
+000000F0:             ; 
+000000F0: EAFFFFFE    ; End         B End ; infinite loop so the PC does not infinitely increment
+000000F4: EAFFFFFD    ;             B End
+000000F8:             ; ; stack
+000000F8:             ; stack       DEFS 100
+0000015C:             ; stack_end
+0000015C:             ; ; change log
+0000015C:             ; 
+
+Symbol Table: Labels
+: Port_Area                         10000000  Value
+: Port_A                            00000000  Value
+: Port_B                            00000004  Value
+: Led_Dis                           000000EF  Value
+: E_En                              00000001  Value
+: LCD_status                        00000080  Value
+: string                            00000004  Local -- ARM
+: main                              00000014  Local -- ARM
+: dis_LED                           00000030  Local -- ARM
+: clear_LCD                         00000040  Local -- ARM
+: printString                       0000005C  Local -- ARM
+: printLoop                         00000064  Local -- ARM
+: PS_finished                       00000080  Local -- ARM
+: wait                              00000084  Local -- ARM
+: step2                             00000094  Local -- ARM
+: print                             000000C0  Local -- ARM
+: clear                             000000D0  Local -- ARM
+: End                               000000F0  Local -- ARM
+: stack                             000000F8  Local -- ARM
+: stack_end                         0000015C  Local -- ARM

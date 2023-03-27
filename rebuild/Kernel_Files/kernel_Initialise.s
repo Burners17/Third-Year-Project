@@ -46,7 +46,8 @@ kernal_Initialise
  ;
  ; Set up Interrupt Stack Pointer
     ADRL    SP, Interrupt_Stack_End      ; Sets up Interrupt Stack Pointer
-
+   MOV      R0, #Interrupt_Desired
+   BL       Interrupt_Set
 ; Most likely redundant
  ; Return to Supervisor Mode 
     MRS     R0, CPSR                      ; Read Current Status of CPSR
@@ -57,6 +58,7 @@ kernal_Initialise
 ;
 ; Initialise first user process which is always terminal handler 
    ADRL     R0, Terminal_Handler_Process
+   ;ADRL     R0, HelloWorld_Handler_Process 
    LDR      R14, [R0, #process_constructor]
    ; No need to preserve flags so this makes it easier
    MOV      R0, #User_Mode_With_Int

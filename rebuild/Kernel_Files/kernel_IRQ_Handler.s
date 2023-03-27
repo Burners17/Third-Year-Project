@@ -1,11 +1,13 @@
 ; Interrupt handler 
 IRQ_Handler 
     SUB     LR, LR, #4 ; moves LR back one step so no need to sub when returning
-    PUSH    {R4-R5, LR} ; preserves registers
+    PUSH    {R4-R6, LR} ; preserves registers
 
     ; Find which interrupts where triggered 
     MOV     R4, #Port_Area 
     LDRB    R5, [R4, #Interrupt_Alert_Offset]
+    LDR     R6, [R4, #Interrupt_Active_Offset]
+    AND     R5, R5, R6
     ;AND     R5, R5, #Interrupt_Desired
 
     ; Check if serial ready to read is high 
@@ -23,13 +25,13 @@ IRQ_Handler
 
 
 ; Return to were interrupt occured 
-    LDMFD SP!, {R4-R5, PC}^
+    LDMFD SP!, {R4-R6, PC}^
 
 IRQ_RxD ; interrupt from serial receiver 
     PUSH    {R0-R3, LR} 
     MOV     R3, #Terminal_Data
     LDR     R1, [R4, R3] ; R4 comes from interrupt handler as a whole 
-    STR     R1, [R4, R3] ; 
+    ;STR     R1, [R4, R3] ; echos to terminal 
     
     ADR     R0, Serial_RxD_Buffer_Address
     LDR     R0, [R0]

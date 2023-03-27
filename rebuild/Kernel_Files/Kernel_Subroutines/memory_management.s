@@ -47,6 +47,7 @@ Reserve_Page_Loop
     SUBNE   R4, R4, #4
     BNE     Reserve_Page_Loop
     MOV     R0, R4
+    LSL     R0, R0, #9
     POP     {R4-R7, PC}
 
 
@@ -58,6 +59,7 @@ memory_free
 ;   R0 1 on success and 0 on failure
     
     PUSH    {R4-R5, LR}
+    LSR     R0, R0, #9
     MOV     R14, #0 
     ADRL    R4, current_process
     LDR     R4, [R4]

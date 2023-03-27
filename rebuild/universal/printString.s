@@ -12,7 +12,8 @@ printString
     MOV     R4, R1
 
 printStringLoop 
-    LDRB    R0, [R4]!   ; Get next character to be printed 
+    LDRB    R0, [R4]   ; Get next character to be printed
+    ADD     R4, R4, #1 
     CMP     R0, #0 
     BEQ     print_String_Complete     ; Return to printString Call and restores Registers to before call
 printCharLoop
@@ -20,7 +21,7 @@ printCharLoop
     CMP     R1, #0          ; loops incase LCD is not ready 
     BNE     printCharLoop  
     CMP     R2, #0          ; occurs when a print was unsucessful, perhase due to ownership issues
-    BEQ     printFailed
+    BNE     printFailed
     B       printStringLoop
 
 printFailed

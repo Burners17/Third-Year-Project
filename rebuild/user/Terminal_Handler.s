@@ -19,17 +19,12 @@ Terminal_Handler_Constructor
     MOV     R1, #StandardIn_Buffer_Size
     BL      buffer_initialise
 
-; Request that Interrupt for when something is received in RxD 
-    ; Set up reciever interrupt 
-    MOV     R0, #Interrupt_Receiver
-    SVC     Interrupt_Set_SVC
-
-
 ;
 ; Main 
  ; Set up Constants 
-    ADRL     R11, Serial_RxD_Buffer_Address 
-    MOV     R10, #1
+  ADRL    R11, Serial_RxD_Buffer_Address 
+  LDR     R11, [R11]
+  MOV     R10, #1
     ;MOV     R10, #Terminal_Control
     ;MOV     R9, #Terminal_Data
 
@@ -61,10 +56,11 @@ Terminal_Handler_Main_Loop
     ; Places input into StandardIn Buffer 
     ; Checks to see if it is in echo to terminal mode or not 
     ;   If it is it send it to TxD Buffer 
-
+  B Terminal_Handler_Main_Loop
 Transmit 
 ; This function is responsible for transmitting 
-
+  SVC   Transmit_SVC
+  B     Terminal_Handler_Main_Loop
 Terminal_Handler_Commands
     ; This function will check input against commands 
 
