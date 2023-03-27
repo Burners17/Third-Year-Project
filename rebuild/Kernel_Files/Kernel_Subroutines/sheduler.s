@@ -1,32 +1,30 @@
 ; this file contains the sheduler for the OS 
 
 
+Shedule_Add 
+; find the last item on the lest 
+    PUSH    {LR}
+    ADRL    R14, sheduler_ready_list_start
+Shedule_Add_Loop    
+    LDR     R14, [R14]
+    CMP     R14, #0 
+    BNE     Shedule_Add_Loop
+    STR     R0, [R14, #pointer_next]
+    POP     {PC}
 
-; Add to shedule 
-    PUSH    {R0, R4, R5, LR}
-    ; check current process 
-    ADRL    R0, current_process  
-    LDR     R0, [R0]
-    CMP     R0, #0
-    MOVEQS    PC, LR
 
-
-
-; Get next from shedule
-;   Checks if there is anything in the shedule 
-    PUSH    {R0, R4, R5, LR}
-    ADRL    R0, sheduler_ready_list_start  
-    ADRL    R4, current_process  
+Shedule_Get_Next 
+; check if there is anything else on the shedule 
+    PUSH    {R4}
+    ADRL    R4, sheduler_ready_list_start
     LDR     R4, [R4]
-    BL      linked_list_get
-    CMP     R1, #&0  
-    BEQ     Shedule_empty
-    MOV     R5, R1 
-    MOV     R1, R4 
-    Bl      linked_list_add
-    MOV     R1, R5 
-    POP     {R0, R4, R5, PC}
-Shedule_empty
-; if not it does not change anything 
-; else it adds current process to the shedule 
-; and gets the next process 
+    CMP     R4, #0
+    BEQ     Shedule_Empty
+    POP     {R4}
+    B       Context_Switch
+    ; 
+Shedule_Empty
+    POP     {R4}
+    MOVS    PC, LR
+
+;
