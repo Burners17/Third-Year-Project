@@ -4,6 +4,15 @@
 Shedule_Add 
 ; find the last item on the lest 
     PUSH    {LR}
+
+    ; Check that the current process is the terminal handler 
+    ADRL    R4, current_process
+    LDR     R4, [R4]
+    ADRL    R5, Terminal_Handler_Process
+    CMP     R4, R5                      ; This is so that user level process cannot add to the sheduler with the exheption of terminal handler
+    BNE     Shedule_Add_Prohibited
+
+Shedule_Add_kernal
     ADRL    R14, sheduler_ready_list_start
 Shedule_Add_Loop    
     LDR     R14, [R14]

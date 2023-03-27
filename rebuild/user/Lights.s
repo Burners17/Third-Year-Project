@@ -5,7 +5,7 @@ ADRL    SP, Lights_Stack_End
 
 ; set and LED 
 
-    MOV     R0, #0 
+    MOV     R0, #0b1101_0000 
     MOV     R1, #0b0010_0010
     SVC     LED_SVC
 

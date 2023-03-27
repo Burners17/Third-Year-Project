@@ -14,6 +14,7 @@ SVC_Jump_Table      DEFW SVC_printChar
                     DEFW Release_LCD_Ownership
                     DEFW Set_LED 
                     DEFW Transmit_word
+                    DEFW Shedule_Add 
                     ;DEFW Initialise_Process
                     ;DEFW Initialise_Process_Return
 SVC_Jump_Table_End

@@ -19,6 +19,7 @@ buffer_initialise
 ;   R1 buffer size in words 
 ;   
     PUSH    {R4, LR}
+    MOV     R2, #0
     ADD     R4, R0, #buffer_data ; this calculates the start of buffer memory 
     STR     R4, [R0, #buffer_start] ; stores start of buffer in start of buffer offset 
     STR     R4, [R0, #buffer_head]
@@ -99,5 +100,5 @@ buffer_get
 
 ; XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 buffer_empty 
-    MOV     R1, #0 
+    MOV     R0, #0 
     POP     {R4-R6, PC}

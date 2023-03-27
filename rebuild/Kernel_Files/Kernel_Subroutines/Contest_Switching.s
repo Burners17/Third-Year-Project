@@ -21,18 +21,17 @@ Context_Store
     PUSH    {R0, SP, LR}^
     ADRL    R0, current_process
     ;LDR     R0, [R0, #context_switch_pointer]
-    STMFD   R0, {R1-R12, LR}
+    STMDB   R0, {R1-R12, LR}
     POP     {R1-R3}
     MRS     R4, SPSR
-    STMFA   R0, {R1-R4}
+    STMIA   R0, {R1-R4}
     B Context_Switch_Store_Return 
 
 Context_Load
    ; ADRL    R1, current_process
     ;LDR     R1, [R1, #context_switch_pointer]
-    LDMFA   R1, {R0, R2, R3, R4}
+    LDMIA   R1, {R0, R2, R3, R4}
     ;MSR     R4, SPSR
     PUSH    {R2, R3}
     POP     {SP, LR}^
-    LDMFD   R1, {R1-R12, LR}
-    MOVS    PC, LR 
+    LDMDB   R1, {R1-R12, PC}^

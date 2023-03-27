@@ -73,5 +73,5 @@ IRQ_Timer
     STRB R1, [R0, #Interrupt_Timer_Offset]
     POP     {R0-R1}
     POP     {R4-R5, LR}
-    B       Context_Switch
+    B       Shedule_Get_Next
     

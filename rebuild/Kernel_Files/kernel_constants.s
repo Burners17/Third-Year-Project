@@ -10,6 +10,7 @@ Print_String_SVC            EQU &0
 Release_LCD_SVC             EQU &4
 LED_SVC                     EQU &8 
 Transmit_SVC                EQU &C
+Start_Process_SVC           EQU &10
 ;EQU &0 
 ;EQU &4
 ;EQU &8

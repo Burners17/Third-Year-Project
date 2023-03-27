@@ -58,6 +58,8 @@ kernal_Initialise
 ;
 ; Initialise first user process which is always terminal handler 
    ADRL     R0, Terminal_Handler_Process
+   ADRL     R1, current_process
+   STR      R0, [R1]
    ;ADRL     R0, HelloWorld_Handler_Process 
    LDR      R14, [R0, #process_constructor]
    ; No need to preserve flags so this makes it easier
