@@ -19,6 +19,7 @@ Shedule_Add_Loop
     CMP     R14, #0 
     BNE     Shedule_Add_Loop
     STR     R0, [R14, #pointer_next]
+Shedule_Add_Prohibited
     POP     {PC}
 
 

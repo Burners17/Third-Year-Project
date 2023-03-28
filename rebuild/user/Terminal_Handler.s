@@ -62,6 +62,7 @@ Terminal_Handler_Main_Loop
     MOV   R9, R0
   B Terminal_Handler_Main_Loop
 Transmit 
+;B     Terminal_Handler_Main_Loop
 ; This function is responsible for transmitting 
   SVC   Transmit_SVC
   B     Terminal_Handler_Main_Loop

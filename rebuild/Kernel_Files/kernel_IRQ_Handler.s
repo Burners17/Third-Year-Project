@@ -29,15 +29,15 @@ IRQ_Handler
 
 IRQ_RxD ; interrupt from serial receiver 
     PUSH    {R0-R3, LR} 
-    MOV     R3, #Terminal_Data
-    LDR     R1, [R4, R3] ; R4 comes from interrupt handler as a whole 
-    ;STR     R1, [R4, R3] ; echos to terminal 
+    MOV     R3, #&10
+    LDRB     R1, [R4, R3] ; R4 comes from interrupt handler as a whole 
+    ;STRB     R1, [R4, R3] ; echos to terminal 
     
     ADR     R0, Serial_RxD_Buffer_Address
     LDR     R0, [R0]
     BL      buffer_put
     BIC     R5, R5, #Interrupt_Receiver ; clears serial RxD interrupt
-    STRB    R5, [R4, #Interrupt_Alert_Offset]
+    ;STRB    R5, [R4, #Interrupt_Alert_Offset]
     POP     {R0-R3, PC}
 
 

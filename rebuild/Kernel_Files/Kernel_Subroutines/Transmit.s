@@ -4,6 +4,13 @@
 ; load control to see if transmitter internal buffer is full 
 
 Transmit_word 
+    PUSH    {R4, R5, LR}
+    MOV     R4, #Port_Area
+    MOV     R5, #&10
+    STRB    R0, [R4, R5]
+    POP     {R4, R5, PC}
+
+
     PUSH    {R1-R6, LR} 
     MOV     R5, #Port_Area
     MOV     R6, #Terminal_Control

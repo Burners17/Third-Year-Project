@@ -74,7 +74,7 @@ buffer_get
 ; Inputs 
 ;   R0 Address of where the buffer starts 
 ; Outputs 
-;   R1 Word retrieved, 0 when empty
+;   R0 Word retrieved, 0 when empty
     PUSH    {R4-R6, LR}
     LDR     R4, [R0, #buffer_head]
     LDR     R5, [R0, #buffer_tail]  
@@ -95,6 +95,7 @@ buffer_get
     LDREQ   R4, [R0, #buffer_start]
     ADDNE   R4, R4, #&4
     STR     R4, [R0, #buffer_head]
+    MOV     R0, R1
     POP     {R4-R6, PC}
 
 
