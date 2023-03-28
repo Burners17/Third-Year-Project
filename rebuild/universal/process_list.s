@@ -12,7 +12,7 @@ Terminal_Handler_Process
     DEFW 1
     DEFW Terminal_Handler_Constructor
     DEFW 0 
-    DEFS &80 
+    DEFS &C8 
     Align
 
 Lights_Handler_Process 
