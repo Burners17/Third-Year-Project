@@ -15,9 +15,10 @@ Shedule_Add
 Shedule_Add_kernal
     ADRL    R14, sheduler_ready_list_start
 Shedule_Add_Loop    
-    LDR     R14, [R14]
+    LDR     R14, [R14, #pointer_next]
     CMP     R14, #0 
     BNE     Shedule_Add_Loop
+    ADRL    R14, sheduler_ready_list_start    
     STR     R0, [R14, #pointer_next]
 Shedule_Add_Prohibited
     POP     {PC}

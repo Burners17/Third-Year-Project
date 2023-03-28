@@ -20,7 +20,7 @@ Context_Switch_Store_Return
 Context_Store 
     PUSH    {R0, SP, LR}^
     ADRL    R0, current_process
-    ;LDR     R0, [R0, #context_switch_pointer]
+    LDR     R0, [R0, #context_switch_pointer]
     STMDB   R0, {R1-R12, LR}
     POP     {R1-R3}
     MRS     R4, SPSR
