@@ -11,6 +11,9 @@ Shedule_Add
     ADRL    R5, Terminal_Handler_Process
     CMP     R4, R5                      ; This is so that user level process cannot add to the sheduler with the exheption of terminal handler
     BNE     Shedule_Add_Prohibited
+    ADRL    R0, sheduler_ready_list_start
+    BL      linked_list_add
+    POP     {PC}
 
 Shedule_Add_kernal
     ADRL    R14, sheduler_ready_list_start

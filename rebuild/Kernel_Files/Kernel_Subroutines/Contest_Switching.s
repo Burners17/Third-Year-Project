@@ -4,6 +4,8 @@ Context_Switch
     ; Function to check status of sheduler, maybe get the next one here 
     B       Context_Store
 Context_Switch_Store_Return
+    ADRL    R0, sheduler_ready_list_start  
+    BL      linked_list_get 
     ; no need to protect registers since they will be overwritten later anyway 
     ADRL    R1, current_process  
     LDR     R1, [R1]
