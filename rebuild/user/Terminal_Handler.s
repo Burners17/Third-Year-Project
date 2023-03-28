@@ -78,7 +78,7 @@ Terminal_Handler_Commands
     B     Terminal_Handler_Main_Loop
 
 printHello  
-    ADRL  R1, HelloWorld_Handler_Process 
+    ADRL  R0, HelloWorld_Handler_Process 
     SVC   Start_Process_SVC
     MOV   R9, #0 
     B     Terminal_Handler_Commands

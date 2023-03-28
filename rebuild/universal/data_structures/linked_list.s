@@ -12,6 +12,10 @@ linked_list_add
 ; Inputs 
 ;   R0 Address of start of list     
     PUSH    {R4, LR} 
+    LDR     R4, [R0, #pointer_next]
+    CMP     R4, #0 
+    STREQ   R1, [R0, #pointer_next]
+    BEQ     linked_list_add_end
 linked_list_add_loop
     LDR     R4, [R0, #pointer_next]
     ; See if its null 
@@ -19,6 +23,7 @@ linked_list_add_loop
     MOVNE   R0, R4 
     BNE     linked_list_add_loop
     STR     R1, [R4, #pointer_next]
+linked_list_add_end
     POP     {R4, PC}
 
 linked_list_get 
