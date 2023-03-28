@@ -68,10 +68,10 @@ Transmit
   B     Terminal_Handler_Main_Loop
 Terminal_Handler_Commands
     ; This function will check input against commands 
-    CMP   R9, #1 
+    CMP   R9, #&31 
     BEQ   printHello
     
-    CMP   R9, #2
+    CMP   R9, #&32
     BEQ   LED_Show
 
     MOV   R9, #0 

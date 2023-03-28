@@ -1149,10 +1149,10 @@ KMD
 000013D0: EAFFFFF2    ;   B     Terminal_Handler_Main_Loop
 000013D4:             ; Terminal_Handler_Commands
 000013D4:             ;     ; This function will check input against commands 
-000013D4: E3590001    ;     CMP   R9, #1 
+000013D4: E3590031    ;     CMP   R9, #&31 
 000013D8: 0A000003    ;     BEQ   printHello
 000013DC:             ;     
-000013DC: E3590002    ;     CMP   R9, #2
+000013DC: E3590032    ;     CMP   R9, #&32
 000013E0: 0A000005    ;     BEQ   LED_Show
 000013E4:             ; 
 000013E4: E3A09000    ;     MOV   R9, #0 
