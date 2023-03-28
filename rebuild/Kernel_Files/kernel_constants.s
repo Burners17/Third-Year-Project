@@ -31,7 +31,7 @@ LED_On                      EQU 0B0001_0000
 ; Interrupt bits 
 Interrupt_Receiver          EQU 0b0001_0000
 Interrupt_Transmit          EQU 0b0010_0000
-Interrupt_Desired           EQU 0b0011_000
+Interrupt_Desired           EQU 0b0001_0001
 Interrupt_Active_Offset     EQU &1C
 Interrupt_Alert_Offset      EQU &18
 Interrupt_Timer_Offset      EQU &0C ; This location holds the value at which the Interrupt will trigger when the timer reaches

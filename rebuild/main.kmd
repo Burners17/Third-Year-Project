@@ -16,7 +16,7 @@ KMD
 0000001C: EAFFFFFE    ; Fast_Interrupt_Request B Fast_Interrupt_Request ; If a Fast Interrupt occurs, PC jumps here
 00000020:             ; 
 00000020:             ; Initialise_Program
-00000020: EA000038    ; B kernal_Initialise
+00000020: EA000035    ; B kernal_Initialise
 00000024:             ; 
 00000024:             ; GET     kernel_SVC_Handler.s
 00000024: E92D4030    ; SVC_Handler PUSH  {R4-R5, LR}
@@ -56,124 +56,129 @@ KMD
 0000006C:             ;     ; Find which interrupts where triggered 
 0000006C: E3A04201    ;     MOV     R4, #Port_Area 
 00000070: E5D45018    ;     LDRB    R5, [R4, #Interrupt_Alert_Offset]
-00000074: E594601C    ;     LDR     R6, [R4, #Interrupt_Active_Offset]
-00000078: E0055006    ;     AND     R5, R5, R6
-0000007C:             ;     ;AND     R5, R5, #Interrupt_Desired
+00000074:             ;     ;LDR     R6, [R4, #Interrupt_Active_Offset]
+00000074:             ;     ;AND     R5, R5, R6
+00000074:             ;     ;AND     R5, R5, #Interrupt_Desired
+00000074:             ; 
+00000074:             ;     ; Check if serial ready to read is high 
+00000074: E3150010    ;     TST R5, #&10
+00000078: 1B000003    ;     BLNE IRQ_RxD
 0000007C:             ; 
-0000007C:             ;     ; Check if serial ready to read is high 
-0000007C: E3150010    ;     TST R5, #&10
-00000080: 1B000004    ;     BLNE IRQ_RxD
-00000084:             ; 
-00000084:             ; 
-00000084:             ;     ; Check if serial ready to write is high 
-00000084: E3150020    ;     TST R5, #&20
-00000088: 1B00000A    ;     BLNE IRQ_TxD    
+0000007C:             ; 
+0000007C:             ;     ; Check if serial ready to write is high 
+0000007C: E3150020    ;     TST R5, #&20
+00000080:             ;     ;BLNE IRQ_TxD    
+00000080:             ; 
+00000080:             ;     ; Check if time interrupt is high
+00000080: E3150001    ;     TST R5, #&1
+00000084: 1A000015    ;     BNE IRQ_Timer
+00000088:             ; 
+00000088:             ; 
+00000088:             ; ; Return to were interrupt occured 
+00000088: E8FD8070    ;     LDMFD SP!, {R4-R6, PC}^
 0000008C:             ; 
-0000008C:             ;     ; Check if time interrupt is high
-0000008C: E3150000    ;     TST R5, #&0
-00000090: 1A000015    ;     BNE IRQ_Timer
-00000094:             ; 
-00000094:             ; 
-00000094:             ; ; Return to were interrupt occured 
-00000094: E8FD8070    ;     LDMFD SP!, {R4-R6, PC}^
-00000098:             ; 
-00000098:             ; IRQ_RxD ; interrupt from serial receiver 
-00000098: E92D400F    ;     PUSH    {R0-R3, LR} 
-0000009C: E3A03010    ;     MOV     R3, #&10
-000000A0: E7D41003    ;     LDRB     R1, [R4, R3] ; R4 comes from interrupt handler as a whole 
-000000A4:             ;     ;STRB     R1, [R4, R3] ; echos to terminal 
-000000A4:             ;     
-000000A4: E28F00F4    ;     ADR     R0, Serial_RxD_Buffer_Address
-000000A8: E5100000    ;     LDR     R0, [R0]
-000000AC: EB00039F    ;     BL      buffer_put
-000000B0: E3C55010    ;     BIC     R5, R5, #Interrupt_Receiver ; clears serial RxD interrupt
-000000B4:             ;     ;STRB    R5, [R4, #Interrupt_Alert_Offset]
-000000B4: E8BD800F    ;     POP     {R0-R3, PC}
-000000B8:             ; 
-000000B8:             ; 
-000000B8:             ; IRQ_TxD 
-000000B8:             ;     ; check if StandardOut has anything in its buffer 
-000000B8:             ;     ; if so place into TxD until either buffer is empty or TxD is no longer ready 
-000000B8:             ;     ; lower the TxD alert
-000000B8: E92D4007    ;     PUSH    {R0-R2, LR}
-000000BC: E28F00F4    ;     ADRL    R0, Serial_TxD_Buffer_Address
-000000C0: E3A02010    ;     MOV     R2, #Terminal_Data
-000000C4: EB0003AC    ;     BL      buffer_get
-000000C8: E3510000    ;     CMP     R1, #0 
-000000CC: 0A000001    ;     BEQ     TxD_buffer_empty
-000000D0: E7841002    ;     STR     R1, [R4, R2]      
-000000D4:             ;     
-000000D4: E8BD8007    ;     POP     {R0-R2, PC}
-000000D8:             ; 
-000000D8:             ; TxD_buffer_empty
-000000D8: E3A00020    ;     MOV     R0, #Interrupt_Transmit
-000000DC: EB000295    ;     BL      Interrupt_Off
-000000E0: E3C55020    ;     BIC     R5, R5, #Interrupt_Transmit ; clears serial RxD interrupt
-000000E4: E5C45018    ;     STRB    R5, [R4, #Interrupt_Alert_Offset]
-000000E8: E8BD8007    ;     POP     {R0-R2, PC}
-000000EC:             ; 
-000000EC:             ; 
-000000EC:             ; IRQ_Timer
-000000EC:             ;     ; this is where timing interrupts are handled
-000000EC:             ;     ; will be used to start context switch 
-000000EC: E92D0003    ;     PUSH    {R0-R1}
-000000F0:             ;     ; Increment the time 
-000000F0: E5D0100C    ;     LDRB R1, [R0, #Interrupt_Timer_Offset]
-000000F4: E2811064    ;     ADD  R1, R1, #Interrupt_Time_Interval
-000000F8: E5C0100C    ;     STRB R1, [R0, #Interrupt_Timer_Offset]
-000000FC: E8BD0003    ;     POP     {R0-R1}
-00000100: E8BD4030    ;     POP     {R4-R5, LR}
-00000104: EA000311    ;     B       Shedule_Get_Next
-00000108:             ;     
-00000108:             ; 
-00000108:             ; 
-00000108:             ; ; Loads the Kernal_Initialise code 
-00000108:             ; GET     kernel_Initialise.s
-00000108:             ; ; This program will set up the Operating systems 
-00000108:             ; ; It will 
-00000108:             ; ;   Set up Supervisor mode
-00000108:             ; ;       Set Stack pointer  
-00000108:             ; ;   Set up Interrupt mode 
-00000108:             ; ;       Set up anything required by the interrupts 
-00000108:             ; ;       Set Stack pointer
-00000108:             ; 
-00000108:             ; kernal_Initialise
-00000108:             ; 
-00000108:             ; ; Set up Supervisor 
-00000108:             ;  ; Set up Stack pointer 
-00000108: E28FD00A    ;   ADRL    SP, Supervisor_Stack_End
-0000010C: E28DDC03    ; 
-00000110:             ; 
-00000110:             ; ; Set up Interrupt Mode 
-00000110:             ;  ; Set up anything required or used by interrupts 
-00000110:             ;   ; RxD Interrupt 
-00000110:             ;    ; This interrupt requires a buffer to place things into 
-00000110:             ;     ; Get address of buffer and store it in a know variable 
-00000110: E28F0F57    ;     ADRL    R0, Serial_RxD_Buffer_Start
-00000114: E2800B01    ; 
-00000118: E28F1080    ;     ADRL    R1, Serial_RxD_Buffer_Address
-0000011C: E5010000    ;     STR     R0, [R1]
-00000120:             ;     ; Initialise the buffer 
-00000120: E28F102E    ;     ADRL    R1, Serial_RxD_Buffer_Size
-00000124: E2811C01    ; 
-00000128: E5111000    ;     LDR     R1, [R1]
-0000012C: EB000375    ;     BL      buffer_initialise
-00000130:             ; 
-00000130:             ;   ; TxD Interrupt 
-00000130:             ;    ; Buffer it uses
-00000130:             ;     ; Get address of buffer and store it in a know variable 
-00000130: E28F0FE5    ;     ADRL    R0, Serial_TxD_Buffer_Start
-00000134: E2800B01    ; 
-00000138: E28F1078    ;     ADRL    R1, Serial_TxD_Buffer_Address
-0000013C: E5010000    ;     STR     R0, [R1]
-00000140:             ;     ; Initialise the buffer 
-00000140: E28F100E    ;     ADRL    R1, Serial_TxD_Buffer_Size
-00000144: E2811C01    ; 
-00000148: E5111000    ;     LDR     R1, [R1]
-0000014C: EB00036D    ;     BL      buffer_initialise   
-00000150:             ;   ; 
-00000150:             ;   ; Timer Interrupt 
-00000150:             ;   ; NA 
+0000008C:             ; IRQ_RxD ; interrupt from serial receiver 
+0000008C: E92D400F    ;     PUSH    {R0-R3, LR} 
+00000090: E3A03010    ;     MOV     R3, #&10
+00000094: E7D41003    ;     LDRB     R1, [R4, R3] ; R4 comes from interrupt handler as a whole 
+00000098:             ;     ;STRB     R1, [R4, R3] ; echos to terminal 
+00000098:             ;     
+00000098: E28F0C01    ;     ADR     R0, Serial_RxD_Buffer_Address
+0000009C: E5100000    ;     LDR     R0, [R0]
+000000A0: EB0003A2    ;     BL      buffer_put
+000000A4: E3C55010    ;     BIC     R5, R5, #Interrupt_Receiver ; clears serial RxD interrupt
+000000A8:             ;     ;STRB    R5, [R4, #Interrupt_Alert_Offset]
+000000A8: E8BD800F    ;     POP     {R0-R3, PC}
+000000AC:             ; 
+000000AC:             ; 
+000000AC:             ; IRQ_TxD 
+000000AC:             ;     ; check if StandardOut has anything in its buffer 
+000000AC:             ;     ; if so place into TxD until either buffer is empty or TxD is no longer ready 
+000000AC:             ;     ; lower the TxD alert
+000000AC: E92D4007    ;     PUSH    {R0-R2, LR}
+000000B0: E28F0C01    ;     ADRL    R0, Serial_TxD_Buffer_Address
+000000B4: E3A02010    ;     MOV     R2, #Terminal_Data
+000000B8: EB0003AF    ;     BL      buffer_get
+000000BC: E3510000    ;     CMP     R1, #0 
+000000C0: 0A000001    ;     BEQ     TxD_buffer_empty
+000000C4: E7841002    ;     STR     R1, [R4, R2]      
+000000C8:             ;     
+000000C8: E8BD8007    ;     POP     {R0-R2, PC}
+000000CC:             ; 
+000000CC:             ; TxD_buffer_empty
+000000CC: E3A00020    ;     MOV     R0, #Interrupt_Transmit
+000000D0: EB000298    ;     BL      Interrupt_Off
+000000D4: E3C55020    ;     BIC     R5, R5, #Interrupt_Transmit ; clears serial RxD interrupt
+000000D8: E5C45018    ;     STRB    R5, [R4, #Interrupt_Alert_Offset]
+000000DC: E8BD8007    ;     POP     {R0-R2, PC}
+000000E0:             ; 
+000000E0:             ; 
+000000E0:             ; IRQ_Timer
+000000E0:             ;     ; this is where timing interrupts are handled
+000000E0:             ;     ; will be used to start context switch 
+000000E0: E92D0003    ;     PUSH    {R0-R1}
+000000E4:             ;     ; Increment the time 
+000000E4: E5D4100C    ;     LDRB    R1, [R4, #Interrupt_Timer_Offset]
+000000E8: E2811064    ;     ADD     R1, R1, #Interrupt_Time_Interval
+000000EC: E5C4100C    ;     STRB    R1, [R4, #Interrupt_Timer_Offset]
+000000F0: E8BD0003    ;     POP     {R0-R1}
+000000F4: E8BD4070    ;     POP     {R4-R6, LR}
+000000F8: EA000314    ;     B       Shedule_Get_Next
+000000FC:             ;     
+000000FC:             ; 
+000000FC:             ; 
+000000FC:             ; ; Loads the Kernal_Initialise code 
+000000FC:             ; GET     kernel_Initialise.s
+000000FC:             ; ; This program will set up the Operating systems 
+000000FC:             ; ; It will 
+000000FC:             ; ;   Set up Supervisor mode
+000000FC:             ; ;       Set Stack pointer  
+000000FC:             ; ;   Set up Interrupt mode 
+000000FC:             ; ;       Set up anything required by the interrupts 
+000000FC:             ; ;       Set Stack pointer
+000000FC:             ; 
+000000FC:             ; kernal_Initialise
+000000FC:             ; 
+000000FC:             ; ; Set up Supervisor 
+000000FC:             ;  ; Set up Stack pointer 
+000000FC: E28FD016    ;   ADRL    SP, Supervisor_Stack_End
+00000100: E28DDC03    ; 
+00000104:             ; 
+00000104:             ; ; Set up Interrupt Mode 
+00000104:             ;  ; Set up anything required or used by interrupts 
+00000104:             ;   ; RxD Interrupt 
+00000104:             ;    ; This interrupt requires a buffer to place things into 
+00000104:             ;     ; Get address of buffer and store it in a know variable 
+00000104: E28F0F5A    ;     ADRL    R0, Serial_RxD_Buffer_Start
+00000108: E2800B01    ; 
+0000010C: E28F108C    ;     ADRL    R1, Serial_RxD_Buffer_Address
+00000110: E5010000    ;     STR     R0, [R1]
+00000114:             ;     ; Initialise the buffer 
+00000114: E28F103A    ;     ADRL    R1, Serial_RxD_Buffer_Size
+00000118: E2811C01    ; 
+0000011C: E5111000    ;     LDR     R1, [R1]
+00000120: EB000378    ;     BL      buffer_initialise
+00000124:             ; 
+00000124:             ;   ; TxD Interrupt 
+00000124:             ;    ; Buffer it uses
+00000124:             ;     ; Get address of buffer and store it in a know variable 
+00000124: E28F0E7A    ;     ADRL    R0, Serial_TxD_Buffer_Start
+00000128: E2800000    ; 
+0000012C: E28F1084    ;     ADRL    R1, Serial_TxD_Buffer_Address
+00000130: E5010000    ;     STR     R0, [R1]
+00000134:             ;     ; Initialise the buffer 
+00000134: E28F101A    ;     ADRL    R1, Serial_TxD_Buffer_Size
+00000138: E2811C01    ; 
+0000013C: E5111000    ;     LDR     R1, [R1]
+00000140: EB000370    ;     BL      buffer_initialise   
+00000144:             ;   ; 
+00000144:             ;   ; Timer Interrupt 
+00000144:             ;   ; Get current timer time 
+00000144:             ;   ; Add 200 to it 
+00000144:             ;   ; 
+00000144: E5D0100C    ;    LDRB R1, [R0, #Interrupt_Timer_Offset]
+00000148: E2811064    ;    ADD  R1, R1, #Interrupt_Time_Interval
+0000014C: E5C0100C    ;    STRB R1, [R0, #Interrupt_Timer_Offset]
 00000150:             ; ; Switch Mode to Interupt mode 
 00000150: E10F0000    ;     MRS     R0, CPSR                      ; Read Current Status of CPSR
 00000154: E3C0001F    ;     BIC     R0, R0, #System_Mode_Bit_Mask ; Clears Mode field of CPSR
@@ -183,7 +188,7 @@ KMD
 00000160:             ;  ; Set up Interrupt Stack Pointer
 00000160: E28FD00A    ;     ADRL    SP, Interrupt_Stack_End      ; Sets up Interrupt Stack Pointer
 00000164: E28DDC05    ; 
-00000168: E3A00018    ;    MOV      R0, #Interrupt_Desired
+00000168: E3A00011    ;    MOV      R0, #Interrupt_Desired
 0000016C: EB00026C    ;    BL       Interrupt_Set
 00000170:             ; ; Most likely redundant
 00000170:             ;  ; Return to Supervisor Mode 
@@ -240,7 +245,7 @@ KMD
 000001A0:             ; ; Interrupt bits 
 000001A0:             ; Interrupt_Receiver          EQU 0b0001_0000
 000001A0:             ; Interrupt_Transmit          EQU 0b0010_0000
-000001A0:             ; Interrupt_Desired           EQU 0b0011_000
+000001A0:             ; Interrupt_Desired           EQU 0b0001_0001
 000001A0:             ; Interrupt_Active_Offset     EQU &1C
 000001A0:             ; Interrupt_Alert_Offset      EQU &18
 000001A0:             ; Interrupt_Timer_Offset      EQU &0C ; This location holds the value at which the Interrupt will
@@ -1258,11 +1263,11 @@ Symbol Table: Labels
 : SVC_Jump_Table_place_holder       00000060  Local -- ARM
 : SVC_Out_Of_Bounds                 00000060  Local -- ARM
 : IRQ_Handler                       00000064  Local -- ARM
-: IRQ_RxD                           00000098  Local -- ARM
-: IRQ_TxD                           000000B8  Local -- ARM
-: TxD_buffer_empty                  000000D8  Local -- ARM
-: IRQ_Timer                         000000EC  Local -- ARM
-: kernal_Initialise                 00000108  Local -- ARM
+: IRQ_RxD                           0000008C  Local -- ARM
+: IRQ_TxD                           000000AC  Local -- ARM
+: TxD_buffer_empty                  000000CC  Local -- ARM
+: IRQ_Timer                         000000E0  Local -- ARM
+: kernal_Initialise                 000000FC  Local -- ARM
 : IRQ_Mode                          00000012  Value
 : Super_Mode                        00000013  Value
 : System_Mode_Bit_Mask              0000001F  Value
@@ -1282,7 +1287,7 @@ Symbol Table: Labels
 : LED_On                            00000010  Value
 : Interrupt_Receiver                00000010  Value
 : Interrupt_Transmit                00000020  Value
-: Interrupt_Desired                 00000018  Value
+: Interrupt_Desired                 00000011  Value
 : Interrupt_Active_Offset           0000001C  Value
 : Interrupt_Alert_Offset            00000018  Value
 : Interrupt_Timer_Offset            0000000C  Value

@@ -37,7 +37,12 @@ kernal_Initialise
     BL      buffer_initialise   
   ; 
   ; Timer Interrupt 
-  ; NA 
+  ; Get current timer time 
+  ; Add 200 to it 
+  ; 
+   LDRB R1, [R0, #Interrupt_Timer_Offset]
+   ADD  R1, R1, #Interrupt_Time_Interval
+   STRB R1, [R0, #Interrupt_Timer_Offset]
 ; Switch Mode to Interupt mode 
     MRS     R0, CPSR                      ; Read Current Status of CPSR
     BIC     R0, R0, #System_Mode_Bit_Mask ; Clears Mode field of CPSR

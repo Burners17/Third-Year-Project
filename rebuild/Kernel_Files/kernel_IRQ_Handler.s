@@ -6,8 +6,8 @@ IRQ_Handler
     ; Find which interrupts where triggered 
     MOV     R4, #Port_Area 
     LDRB    R5, [R4, #Interrupt_Alert_Offset]
-    LDR     R6, [R4, #Interrupt_Active_Offset]
-    AND     R5, R5, R6
+    ;LDR     R6, [R4, #Interrupt_Active_Offset]
+    ;AND     R5, R5, R6
     ;AND     R5, R5, #Interrupt_Desired
 
     ; Check if serial ready to read is high 
@@ -17,10 +17,10 @@ IRQ_Handler
 
     ; Check if serial ready to write is high 
     TST R5, #&20
-    BLNE IRQ_TxD    
+    ;BLNE IRQ_TxD    
 
     ; Check if time interrupt is high
-    TST R5, #&0
+    TST R5, #&1
     BNE IRQ_Timer
 
 
@@ -68,10 +68,10 @@ IRQ_Timer
     ; will be used to start context switch 
     PUSH    {R0-R1}
     ; Increment the time 
-    LDRB R1, [R0, #Interrupt_Timer_Offset]
-    ADD  R1, R1, #Interrupt_Time_Interval
-    STRB R1, [R0, #Interrupt_Timer_Offset]
+    LDRB    R1, [R4, #Interrupt_Timer_Offset]
+    ADD     R1, R1, #Interrupt_Time_Interval
+    STRB    R1, [R4, #Interrupt_Timer_Offset]
     POP     {R0-R1}
-    POP     {R4-R5, LR}
+    POP     {R4-R6, LR}
     B       Shedule_Get_Next
     
