@@ -1,8 +1,8 @@
 ; This file includes all predefined memory used by the kernal 
 
 ; Stacks 
-    Supervisor_Stack_Size   EQU &256
-    Interrupt_Stack_Size    EQU &256 
+    Supervisor_Stack_Size   EQU &250
+    Interrupt_Stack_Size    EQU &250
         Align 
     ; Supervisor Stack
     Supervisor_Stack_Start  DEFS Supervisor_Stack_Size ; Supervisor Stack
@@ -13,9 +13,9 @@
     Interrupt_Stack_End
         Align
 ; Buffers 
-    Serial_RxD_Buffer_Size  EQU &256
+    Serial_RxD_Buffer_Size  EQU &250
         Align 
-    Serial_TxD_Buffer_Size  EQU &256
+    Serial_TxD_Buffer_Size  EQU &250
         Align 
 
     Serial_RxD_Buffer_Start DEFS Serial_RxD_Buffer_Size

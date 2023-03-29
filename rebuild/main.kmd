@@ -34,11 +34,11 @@ KMD
 00000048: E1B0F00E    ;             MOVS  PC, LR              ; Restores CSPR code and moves PC to call address
 0000004C:             ; 
 0000004C:             ; SVC_Jump_Table_Size EQU SVC_Jump_Table_End - SVC_Jump_Table
-0000004C: 00000E1C    ; SVC_Jump_Table      DEFW SVC_printChar
-00000050: 00000F00    ;                     DEFW Release_LCD_Ownership
-00000054: 00000DA8    ;                     DEFW Set_LED 
-00000058: 00000B48    ;                     DEFW Transmit_word
-0000005C: 00000F34    ;                     DEFW Start_Process 
+0000004C: 00000DE0    ; SVC_Jump_Table      DEFW SVC_printChar
+00000050: 00000EC4    ;                     DEFW Release_LCD_Ownership
+00000054: 00000D6C    ;                     DEFW Set_LED 
+00000058: 00000B1C    ;                     DEFW Transmit_word
+0000005C: 00000EF8    ;                     DEFW Start_Process 
 00000060:             ;                     ;DEFW Initialise_Process
 00000060:             ;                     ;DEFW Initialise_Process_Return
 00000060:             ; SVC_Jump_Table_End
@@ -83,9 +83,9 @@ KMD
 00000094: E7D41003    ;     LDRB     R1, [R4, R3] ; R4 comes from interrupt handler as a whole 
 00000098:             ;     ;STRB     R1, [R4, R3] ; echos to terminal 
 00000098:             ;     
-00000098: E28F00FC    ;     ADR     R0, Serial_RxD_Buffer_Address
+00000098: E28F00F0    ;     ADR     R0, Serial_RxD_Buffer_Address
 0000009C: E5100000    ;     LDR     R0, [R0]
-000000A0: EB0003CB    ;     BL      buffer_put
+000000A0: EB0003BC    ;     BL      buffer_put
 000000A4: E3C55010    ;     BIC     R5, R5, #Interrupt_Receiver ; clears serial RxD interrupt
 000000A8:             ;     ;STRB    R5, [R4, #Interrupt_Alert_Offset]
 000000A8: E8BD800F    ;     POP     {R0-R3, PC}
@@ -96,9 +96,9 @@ KMD
 000000AC:             ;     ; if so place into TxD until either buffer is empty or TxD is no longer ready 
 000000AC:             ;     ; lower the TxD alert
 000000AC: E92D4007    ;     PUSH    {R0-R2, LR}
-000000B0: E28F00FC    ;     ADRL    R0, Serial_TxD_Buffer_Address
+000000B0: E28F00F0    ;     ADRL    R0, Serial_TxD_Buffer_Address
 000000B4: E3A02010    ;     MOV     R2, #Terminal_Data
-000000B8: EB0003D8    ;     BL      buffer_get
+000000B8: EB0003C9    ;     BL      buffer_get
 000000BC: E3510000    ;     CMP     R1, #0 
 000000C0: 0A000001    ;     BEQ     TxD_buffer_empty
 000000C4: E7841002    ;     STR     R1, [R4, R2]      
@@ -107,7 +107,7 @@ KMD
 000000CC:             ; 
 000000CC:             ; TxD_buffer_empty
 000000CC: E3A00020    ;     MOV     R0, #Interrupt_Transmit
-000000D0: EB000297    ;     BL      Interrupt_Off
+000000D0: EB00028C    ;     BL      Interrupt_Off
 000000D4: E3C55020    ;     BIC     R5, R5, #Interrupt_Transmit ; clears serial RxD interrupt
 000000D8: E5C45018    ;     STRB    R5, [R4, #Interrupt_Alert_Offset]
 000000DC: E8BD8007    ;     POP     {R0-R2, PC}
@@ -123,7 +123,7 @@ KMD
 000000EC: E5C4100C    ;     STRB    R1, [R4, #Interrupt_Timer_Offset]
 000000F0: E8BD0003    ;     POP     {R0-R1}
 000000F4: E8BD4070    ;     POP     {R4-R6, LR}
-000000F8: EA00031F    ;     B       Shedule_Get_Next
+000000F8: EA000311    ;     B       Shedule_Get_Next
 000000FC:             ;     
 000000FC:             ; 
 000000FC:             ; 
@@ -141,1200 +141,1185 @@ KMD
 000000FC:             ; 
 000000FC:             ; ; Set up Supervisor 
 000000FC:             ;  ; Set up Stack pointer 
-000000FC: E28FD012    ;   ADRL    SP, Supervisor_Stack_End
-00000100: E28DDC03    ; 
-00000104:             ; 
-00000104:             ; ; Set up Interrupt Mode 
-00000104:             ;  ; Set up anything required or used by interrupts 
-00000104:             ;   ; RxD Interrupt 
-00000104:             ;    ; This interrupt requires a buffer to place things into 
-00000104:             ;     ; Get address of buffer and store it in a know variable 
-00000104: E28F0F59    ;     ADRL    R0, Serial_RxD_Buffer_Start
-00000108: E2800B01    ; 
-0000010C: E28F1088    ;     ADRL    R1, Serial_RxD_Buffer_Address
-00000110: E5010000    ;     STR     R0, [R1]
-00000114:             ;     ; Initialise the buffer 
-00000114: E28F103A    ;     ADRL    R1, Serial_RxD_Buffer_Size
-00000118: E2811C01    ; 
-0000011C: E5111000    ;     LDR     R1, [R1]
-00000120: EB0003A1    ;     BL      buffer_initialise
-00000124:             ; 
-00000124:             ;   ; TxD Interrupt 
-00000124:             ;    ; Buffer it uses
-00000124:             ;     ; Get address of buffer and store it in a know variable 
-00000124: E28F0FE7    ;     ADRL    R0, Serial_TxD_Buffer_Start
-00000128: E2800B01    ; 
-0000012C: E28F1080    ;     ADRL    R1, Serial_TxD_Buffer_Address
-00000130: E5010000    ;     STR     R0, [R1]
-00000134:             ;     ; Initialise the buffer 
-00000134: E28F101A    ;     ADRL    R1, Serial_TxD_Buffer_Size
-00000138: E2811C01    ; 
-0000013C: E5111000    ;     LDR     R1, [R1]
-00000140: EB000399    ;     BL      buffer_initialise   
-00000144:             ;   ; 
-00000144:             ;   ; Timer Interrupt 
-00000144:             ;   ; Get current timer time 
-00000144:             ;   ; Add 200 to it 
-00000144:             ;   ; 
-00000144: E5D0100C    ;    LDRB R1, [R0, #Interrupt_Timer_Offset]
-00000148: E2811064    ;    ADD  R1, R1, #Interrupt_Time_Interval
-0000014C: E5C0100C    ;    STRB R1, [R0, #Interrupt_Timer_Offset]
-00000150:             ; ; Switch Mode to Interupt mode 
-00000150: E10F0000    ;     MRS     R0, CPSR                      ; Read Current Status of CPSR
-00000154: E3C0001F    ;     BIC     R0, R0, #System_Mode_Bit_Mask ; Clears Mode field of CPSR
-00000158: E3800012    ;     ORR     R0, R0, #IRQ_Mode             ; Append IRQ Mode to CPSR
-0000015C: E121F000    ;     MSR     CPSR_c, R0                    ; Updates the CPSR
-00000160:             ;  ;
-00000160:             ;  ; Set up Interrupt Stack Pointer
-00000160: E28FD006    ;     ADRL    SP, Interrupt_Stack_End      ; Sets up Interrupt Stack Pointer
-00000164: E28DDC05    ; 
-00000168: E3A00011    ;    MOV      R0, #Interrupt_Desired
-0000016C: EB00026B    ;    BL       Interrupt_Set
-00000170:             ; ; Most likely redundant
-00000170:             ;  ; Return to Supervisor Mode 
-00000170: E10F0000    ;     MRS     R0, CPSR                      ; Read Current Status of CPSR
-00000174: E3C0001F    ;     BIC     R0, R0, #System_Mode_Bit_Mask ; Clears Mode field of CPSR
-00000178: E3800013    ;     ORR     R0, R0, #Super_Mode           ; Append Supervisor Mode to CPSR
-0000017C: E121F000    ;     MSR     CPSR_c, R0                    ; Updates the CPSR
-00000180:             ;  ;
-00000180:             ; ;
-00000180:             ; ; Initialise first user process which is always terminal handler 
-00000180: E28F0D42    ;    ADRL     R0, Terminal_Handler_Process
-00000184: E28F102C    ;    ADRL     R1, current_process
-00000188: E5010000    ;    STR      R0, [R1]
-0000018C:             ;    ;ADRL     R0, HelloWorld_Handler_Process 
-0000018C: E590E008    ;    LDR      R14, [R0, #process_constructor]
-00000190:             ;    ; No need to preserve flags so this makes it easier
-00000190: E3A00050    ;    MOV      R0, #User_Mode_With_Int
-00000194: E161F000    ;    MSR      SPSR_c, R0 
-00000198: E1B0F00E    ;    MOVS     PC, R14 
-0000019C:             ; 
-0000019C:             ; ; Loads Kernal Constants 
-0000019C:             ; GET     kernel_constants.s 
-0000019C:             ; ; This file holds all of the constants used by the kernal
-0000019C:             ; ; Constants for diffe
-0000019C:             ; IRQ_Mode                    EQU &12         ; Interrupt Mode
-0000019C:             ; Super_Mode                  EQU &13         ; Supervisor Mode
-0000019C:             ; System_Mode_Bit_Mask        EQU &1F ; Used to clear the are that determines system mode
-0000019C:             ; User_Mode_With_Int          EQU &50
-0000019C:             ; 
-0000019C:             ; ; SVC call Constants 
-0000019C:             ; Print_String_SVC            EQU &0 
-0000019C:             ; Release_LCD_SVC             EQU &4
-0000019C:             ; LED_SVC                     EQU &8 
-0000019C:             ; Transmit_SVC                EQU &C
-0000019C:             ; Start_Process_SVC           EQU &10
-0000019C:             ; ;EQU &0 
-0000019C:             ; ;EQU &4
-0000019C:             ; ;EQU &8
-0000019C:             ; ;EQU &C 
-0000019C:             ; ;EQU &10
-0000019C:             ; ;EQU &14
-0000019C:             ; Port_Area                   EQU &10000000
-0000019C:             ; Port_A                      EQU &0 
-0000019C:             ; Port_B                      EQU &4
-0000019C:             ; 
-0000019C:             ; ; LCD constants 
-0000019C:             ; RS_Bit                      EQU 0B0000_0010
-0000019C:             ; RW_Bit                      EQU 0B0000_0100
-0000019C:             ; E_En                        EQU 0B0000_0001
-0000019C:             ; LCD_Ready_Status            EQU 0B1000_0000
-0000019C:             ; LED_On                      EQU 0B0001_0000
-0000019C:             ; 
-0000019C:             ; ; Interrupt bits 
-0000019C:             ; Interrupt_Receiver          EQU 0b0001_0000
-0000019C:             ; Interrupt_Transmit          EQU 0b0010_0000
-0000019C:             ; Interrupt_Desired           EQU 0b0001_0001
-0000019C:             ; Interrupt_Active_Offset     EQU &1C
-0000019C:             ; Interrupt_Alert_Offset      EQU &18
-0000019C:             ; Interrupt_Timer_Offset      EQU &0C ; This location holds the value at which the Interrupt will
+000000FC: E28FDC03    ;   ADRL    SP, Supervisor_Stack_End
+00000100:             ; 
+00000100:             ; ; Set up Interrupt Mode 
+00000100:             ;  ; Set up anything required or used by interrupts 
+00000100:             ;   ; RxD Interrupt 
+00000100:             ;    ; This interrupt requires a buffer to place things into 
+00000100:             ;     ; Get address of buffer and store it in a know variable 
+00000100: E28F0F53    ;     ADRL    R0, Serial_RxD_Buffer_Start
+00000104: E2800B01    ; 
+00000108: E28F1080    ;     ADRL    R1, Serial_RxD_Buffer_Address
+0000010C: E5010000    ;     STR     R0, [R1]
+00000110:             ;     ; Initialise the buffer 
+00000110: E28F1F4E    ;     ADRL    R1, Serial_RxD_Buffer_Size
+00000114: E5111000    ;     LDR     R1, [R1]
+00000118: EB000394    ;     BL      buffer_initialise
+0000011C:             ; 
+0000011C:             ;   ; TxD Interrupt 
+0000011C:             ;    ; Buffer it uses
+0000011C:             ;     ; Get address of buffer and store it in a know variable 
+0000011C: E28F0D1E    ;     ADRL    R0, Serial_TxD_Buffer_Start
+00000120: E28F1080    ;     ADRL    R1, Serial_TxD_Buffer_Address
+00000124: E5010000    ;     STR     R0, [R1]
+00000128:             ;     ; Initialise the buffer 
+00000128: E28F1E12    ;     ADRL    R1, Serial_TxD_Buffer_Size
+0000012C: E5111000    ;     LDR     R1, [R1]
+00000130: EB00038E    ;     BL      buffer_initialise   
+00000134:             ;   ; 
+00000134:             ;   ; Timer Interrupt 
+00000134:             ;   ; Get current timer time 
+00000134:             ;   ; Add 200 to it 
+00000134:             ;   ; 
+00000134: E5D0100C    ;    LDRB R1, [R0, #Interrupt_Timer_Offset]
+00000138: E2811064    ;    ADD  R1, R1, #Interrupt_Time_Interval
+0000013C: E5C0100C    ;    STRB R1, [R0, #Interrupt_Timer_Offset]
+00000140:             ; ; Switch Mode to Interupt mode 
+00000140: E10F0000    ;     MRS     R0, CPSR                      ; Read Current Status of CPSR
+00000144: E3C0001F    ;     BIC     R0, R0, #System_Mode_Bit_Mask ; Clears Mode field of CPSR
+00000148: E3800012    ;     ORR     R0, R0, #IRQ_Mode             ; Append IRQ Mode to CPSR
+0000014C: E121F000    ;     MSR     CPSR_c, R0                    ; Updates the CPSR
+00000150:             ;  ;
+00000150:             ;  ; Set up Interrupt Stack Pointer
+00000150: E28FD0FC    ;     ADRL    SP, Interrupt_Stack_End      ; Sets up Interrupt Stack Pointer
+00000154: E28DDB01    ; 
+00000158: E3A00011    ;    MOV      R0, #Interrupt_Desired
+0000015C: EB000264    ;    BL       Interrupt_Set
+00000160:             ; ; Most likely redundant
+00000160:             ;  ; Return to Supervisor Mode 
+00000160: E10F0000    ;     MRS     R0, CPSR                      ; Read Current Status of CPSR
+00000164: E3C0001F    ;     BIC     R0, R0, #System_Mode_Bit_Mask ; Clears Mode field of CPSR
+00000168: E3800013    ;     ORR     R0, R0, #Super_Mode           ; Append Supervisor Mode to CPSR
+0000016C: E121F000    ;     MSR     CPSR_c, R0                    ; Updates the CPSR
+00000170:             ;  ;
+00000170:             ; ;
+00000170:             ; ; Initialise first user process which is always terminal handler 
+00000170: E28F0FFB    ;    ADRL     R0, Terminal_Handler_Process
+00000174: E2800B03    ; 
+00000178: E28F102C    ;    ADRL     R1, current_process
+0000017C: E5010000    ;    STR      R0, [R1]
+00000180:             ;    ;ADRL     R0, HelloWorld_Handler_Process 
+00000180: E590E008    ;    LDR      R14, [R0, #process_constructor]
+00000184:             ;    ; No need to preserve flags so this makes it easier
+00000184: E3A00050    ;    MOV      R0, #User_Mode_With_Int
+00000188: E161F000    ;    MSR      SPSR_c, R0 
+0000018C: E1B0F00E    ;    MOVS     PC, R14 
+00000190:             ; 
+00000190:             ; ; Loads Kernal Constants 
+00000190:             ; GET     kernel_constants.s 
+00000190:             ; ; This file holds all of the constants used by the kernal
+00000190:             ; ; Constants for diffe
+00000190:             ; IRQ_Mode                    EQU &12         ; Interrupt Mode
+00000190:             ; Super_Mode                  EQU &13         ; Supervisor Mode
+00000190:             ; System_Mode_Bit_Mask        EQU &1F ; Used to clear the are that determines system mode
+00000190:             ; User_Mode_With_Int          EQU &50
+00000190:             ; 
+00000190:             ; ; SVC call Constants 
+00000190:             ; Print_String_SVC            EQU &0 
+00000190:             ; Release_LCD_SVC             EQU &4
+00000190:             ; LED_SVC                     EQU &8 
+00000190:             ; Transmit_SVC                EQU &C
+00000190:             ; Start_Process_SVC           EQU &10
+00000190:             ; ;EQU &0 
+00000190:             ; ;EQU &4
+00000190:             ; ;EQU &8
+00000190:             ; ;EQU &C 
+00000190:             ; ;EQU &10
+00000190:             ; ;EQU &14
+00000190:             ; Port_Area                   EQU &10000000
+00000190:             ; Port_A                      EQU &0 
+00000190:             ; Port_B                      EQU &4
+00000190:             ; 
+00000190:             ; ; LCD constants 
+00000190:             ; RS_Bit                      EQU 0B0000_0010
+00000190:             ; RW_Bit                      EQU 0B0000_0100
+00000190:             ; E_En                        EQU 0B0000_0001
+00000190:             ; LCD_Ready_Status            EQU 0B1000_0000
+00000190:             ; LED_On                      EQU 0B0001_0000
+00000190:             ; 
+00000190:             ; ; Interrupt bits 
+00000190:             ; Interrupt_Receiver          EQU 0b0001_0000
+00000190:             ; Interrupt_Transmit          EQU 0b0010_0000
+00000190:             ; Interrupt_Desired           EQU 0b0001_0001
+00000190:             ; Interrupt_Active_Offset     EQU &1C
+00000190:             ; Interrupt_Alert_Offset      EQU &18
+00000190:             ; Interrupt_Timer_Offset      EQU &0C ; This location holds the value at which the Interrupt will
                       ;  trigger when the timer reaches
-0000019C:             ; 
-0000019C:             ; Interrupt_Time_Interval     EQU &64 ; time gap for interrupts to occur
-0000019C:             ; 
-0000019C:             ; ; Loads Kernal Variables 
-0000019C:             ; GET     kernel_variables.s
-0000019C:             ; ; This file holds all the variables used by the kernal
-0000019C:             ; Serial_RxD_Buffer_Address   DEFS &16
+00000190:             ; 
+00000190:             ; Interrupt_Time_Interval     EQU &64 ; time gap for interrupts to occur
+00000190:             ; 
+00000190:             ; ; Loads Kernal Variables 
+00000190:             ; GET     kernel_variables.s
+00000190:             ; ; This file holds all the variables used by the kernal
+00000190:             ; Serial_RxD_Buffer_Address   DEFS &16
+000001A8:             ;     Align 
+000001A8:             ; Serial_TxD_Buffer_Address   DEFS &1
+000001AC:             ;     Align 
+000001AC: 00000000    ; current_process             DEFW 0
+000001B0:             ;     Align 
+000001B0: 00000000    ; sheduler_ready_list_start   DEFW 0 
 000001B4:             ;     Align 
-000001B4:             ; Serial_TxD_Buffer_Address   DEFS &1
-000001B8:             ;     Align 
-000001B8: 00000000    ; current_process             DEFW 0
-000001BC:             ;     Align 
-000001BC: 00000000    ; sheduler_ready_list_start   DEFW 0 
-000001C0:             ;     Align 
-000001C0:             ; 
-000001C0:             ; ; Loads kernal predefined memeory 
-000001C0:             ; GET     kernel_memory.s
-000001C0:             ; ; This file includes all predefined memory used by the kernal 
-000001C0:             ; 
-000001C0:             ; ; Stacks 
-000001C0:             ;     Supervisor_Stack_Size   EQU &256
-000001C0:             ;     Interrupt_Stack_Size    EQU &256 
-000001C0:             ;         Align 
-000001C0:             ;     ; Supervisor Stack
-000001C0:             ;     Supervisor_Stack_Start  DEFS Supervisor_Stack_Size ; Supervisor Stack
-00000416:             ;     Supervisor_Stack_End
-00000418:             ;         Align
-00000418:             ;     ; Interrupt Stack 
-00000418:             ;     Interrupt_Stack_Start   DEFS Interrupt_Stack_Size ; Interrupt Stack
-0000066E:             ;     Interrupt_Stack_End
-00000670:             ;         Align
-00000670:             ; ; Buffers 
-00000670:             ;     Serial_RxD_Buffer_Size  EQU &256
-00000670:             ;         Align 
-00000670:             ;     Serial_TxD_Buffer_Size  EQU &256
-00000670:             ;         Align 
-00000670:             ; 
-00000670:             ;     Serial_RxD_Buffer_Start DEFS Serial_RxD_Buffer_Size
-000008C6:             ;     Serial_RxD_Buffer_End
-000008C8:             ;         Align 
-000008C8:             ; 
-000008C8:             ;     Serial_TxD_Buffer_Start DEFS Serial_TxD_Buffer_Size
-00000B1E:             ;     Serial_TxD_Buffer_End
-00000B20:             ;         Align
-00000B20:             ; 
-00000B20:             ; GET     Kernel_Subroutines/Subroutines_main.s 
-00000B20:             ; 
-00000B20:             ; GET Setting_Interrupts.s
-00000B20:             ; Interrupt_Set 
-00000B20:             ; ; this sets the desired interrupt 
-00000B20:             ;       ; Enable the desired Interrupts, do not affect other Enabled Interrupts
-00000B20: E3A01201    ;     MOV     R1, #Port_Area
-00000B24: E5D1201C    ;     LDRB    R2, [R1, #Interrupt_Active_Offset]
-00000B28: E1810000    ;     ORR     R0, R1, R0 ; Enables the desired interrupts without touching those already set
-00000B2C: E5C1001C    ;     STRB    R0, [R1, #Interrupt_Active_Offset]  ; memory location of enabled interrupts
-00000B30: E1A0F00E    ;     MOV     PC, LR
-00000B34:             ; 
-00000B34:             ; Interrupt_Off 
-00000B34:             ; ; this removes the desired interrupt 
-00000B34: E3A01201    ;     MOV     R1, #Port_Area
-00000B38: E5D1201C    ;     LDRB    R2, [R1, #Interrupt_Active_Offset]
-00000B3C: E1C10000    ;     BIC     R0, R1, R0 ; Disable the desired interrupts without touching those already set
-00000B40: E5C1001C    ;     STRB    R0, [R1, #Interrupt_Active_Offset]  ; memory location of enabled interrupts
-00000B44: E1A0F00E    ;     MOV     PC, LR
-00000B48:             ; 
-00000B48:             ; 
-00000B48:             ; GET Transmit.s
-00000B48:             ; ; This SVC will send what is requested to Serial Transmitter 
-00000B48:             ; ; 
-00000B48:             ; 
-00000B48:             ; ; load control to see if transmitter internal buffer is full 
-00000B48:             ; 
-00000B48:             ; Transmit_word 
-00000B48: E92D4030    ;     PUSH    {R4, R5, LR}
-00000B4C: E3A04201    ;     MOV     R4, #Port_Area
-00000B50: E3A05010    ;     MOV     R5, #&10
-00000B54: E7C40005    ;     STRB    R0, [R4, R5]
-00000B58: E8BD8030    ;     POP     {R4, R5, PC}
-00000B5C:             ; 
-00000B5C:             ; 
-00000B5C: E92D407E    ;     PUSH    {R1-R6, LR} 
-00000B60: E3A05201    ;     MOV     R5, #Port_Area
-00000B64: E3A06014    ;     MOV     R6, #Terminal_Control
-00000B68:             ;     ;LDR     R1, [R5, R6] 
-00000B68:             ;     ;TST     R1, #2
-00000B68:             ;    ; if EQ then hardware buffer is full 
-00000B68:             ;     ;BNE     Transmit_word_send
-00000B68: E1A01000    ;     MOV     R1, R0 
-00000B6C: E24F0D27    ;     ADRL    R0, Serial_TxD_Buffer_Address
-00000B70: E5100000    ;     LDR     R0, [R0]
-00000B74: EB000116    ;     BL      buffer_put
-00000B78: E3A00020    ;     MOV     R0, #Interrupt_Transmit 
-00000B7C: EBFFFFE7    ;     BL      Interrupt_Set    
-00000B80: E8BD807E    ;     POP     {R1-R6, PC} 
-00000B84:             ; 
-00000B84:             ; Transmit_word_send
-00000B84: E3A06010    ;     MOV     R6, #Terminal_Data
-00000B88: E7850006    ;     STR     R0, [R5, R6]
-00000B8C: E8BD807E    ;     POP     {R1-R6, PC}     
-00000B90:             ; ; if full place on buffer 
-00000B90:             ; ; activate interrupt
-00000B90:             ; 
-00000B90:             ; 
-00000B90:             ;  
-00000B90:             ; 
-00000B90:             ; 
-00000B90:             ; GET Contest_Switching.s
-00000B90:             ; ; File who does c
-00000B90:             ; 
-00000B90:             ; Context_Switch
-00000B90:             ;     ; Function to check status of sheduler, maybe get the next one here 
-00000B90: EA00000C    ;     B       Context_Store
-00000B94:             ; Context_Switch_Store_Return
-00000B94:             ;     ; no need to protect registers since they will be overwritten later anyway 
-00000B94: E24F1F79    ;     ADRL    R1, current_process  
-00000B98: E2411B02    ; 
-00000B9C: E5111000    ;     LDR     R1, [R1]
-00000BA0: E24F0F7B    ;     ADRL    R0, sheduler_ready_list_start  
+000001B4:             ; 
+000001B4:             ; ; Loads kernal predefined memeory 
+000001B4:             ; GET     kernel_memory.s
+000001B4:             ; ; This file includes all predefined memory used by the kernal 
+000001B4:             ; 
+000001B4:             ; ; Stacks 
+000001B4:             ;     Supervisor_Stack_Size   EQU &250
+000001B4:             ;     Interrupt_Stack_Size    EQU &250
+000001B4:             ;         Align 
+000001B4:             ;     ; Supervisor Stack
+000001B4:             ;     Supervisor_Stack_Start  DEFS Supervisor_Stack_Size ; Supervisor Stack
+00000404:             ;     Supervisor_Stack_End
+00000404:             ;         Align
+00000404:             ;     ; Interrupt Stack 
+00000404:             ;     Interrupt_Stack_Start   DEFS Interrupt_Stack_Size ; Interrupt Stack
+00000654:             ;     Interrupt_Stack_End
+00000654:             ;         Align
+00000654:             ; ; Buffers 
+00000654:             ;     Serial_RxD_Buffer_Size  EQU &250
+00000654:             ;         Align 
+00000654:             ;     Serial_TxD_Buffer_Size  EQU &250
+00000654:             ;         Align 
+00000654:             ; 
+00000654:             ;     Serial_RxD_Buffer_Start DEFS Serial_RxD_Buffer_Size
+000008A4:             ;     Serial_RxD_Buffer_End
+000008A4:             ;         Align 
+000008A4:             ; 
+000008A4:             ;     Serial_TxD_Buffer_Start DEFS Serial_TxD_Buffer_Size
+00000AF4:             ;     Serial_TxD_Buffer_End
+00000AF4:             ;         Align
+00000AF4:             ; 
+00000AF4:             ; GET     Kernel_Subroutines/Subroutines_main.s 
+00000AF4:             ; 
+00000AF4:             ; GET Setting_Interrupts.s
+00000AF4:             ; Interrupt_Set 
+00000AF4:             ; ; this sets the desired interrupt 
+00000AF4:             ;       ; Enable the desired Interrupts, do not affect other Enabled Interrupts
+00000AF4: E3A01201    ;     MOV     R1, #Port_Area
+00000AF8: E5D1201C    ;     LDRB    R2, [R1, #Interrupt_Active_Offset]
+00000AFC: E1810000    ;     ORR     R0, R1, R0 ; Enables the desired interrupts without touching those already set
+00000B00: E5C1001C    ;     STRB    R0, [R1, #Interrupt_Active_Offset]  ; memory location of enabled interrupts
+00000B04: E1A0F00E    ;     MOV     PC, LR
+00000B08:             ; 
+00000B08:             ; Interrupt_Off 
+00000B08:             ; ; this removes the desired interrupt 
+00000B08: E3A01201    ;     MOV     R1, #Port_Area
+00000B0C: E5D1201C    ;     LDRB    R2, [R1, #Interrupt_Active_Offset]
+00000B10: E1C10000    ;     BIC     R0, R1, R0 ; Disable the desired interrupts without touching those already set
+00000B14: E5C1001C    ;     STRB    R0, [R1, #Interrupt_Active_Offset]  ; memory location of enabled interrupts
+00000B18: E1A0F00E    ;     MOV     PC, LR
+00000B1C:             ; 
+00000B1C:             ; 
+00000B1C:             ; GET Transmit.s
+00000B1C:             ; ; This SVC will send what is requested to Serial Transmitter 
+00000B1C:             ; ; 
+00000B1C:             ; 
+00000B1C:             ; ; load control to see if transmitter internal buffer is full 
+00000B1C:             ; 
+00000B1C:             ; Transmit_word 
+00000B1C: E92D4030    ;     PUSH    {R4, R5, LR}
+00000B20: E3A04201    ;     MOV     R4, #Port_Area
+00000B24: E3A05010    ;     MOV     R5, #&10
+00000B28: E7C40005    ;     STRB    R0, [R4, R5]
+00000B2C: E8BD8030    ;     POP     {R4, R5, PC}
+00000B30:             ; 
+00000B30:             ; 
+00000B30: E92D407E    ;     PUSH    {R1-R6, LR} 
+00000B34: E3A05201    ;     MOV     R5, #Port_Area
+00000B38: E3A06014    ;     MOV     R6, #Terminal_Control
+00000B3C:             ;     ;LDR     R1, [R5, R6] 
+00000B3C:             ;     ;TST     R1, #2
+00000B3C:             ;    ; if EQ then hardware buffer is full 
+00000B3C:             ;     ;BNE     Transmit_word_send
+00000B3C: E1A01000    ;     MOV     R1, R0 
+00000B40: E24F0E9A    ;     ADRL    R0, Serial_TxD_Buffer_Address
+00000B44: E5100000    ;     LDR     R0, [R0]
+00000B48: EB000112    ;     BL      buffer_put
+00000B4C: E3A00020    ;     MOV     R0, #Interrupt_Transmit 
+00000B50: EBFFFFE7    ;     BL      Interrupt_Set    
+00000B54: E8BD807E    ;     POP     {R1-R6, PC} 
+00000B58:             ; 
+00000B58:             ; Transmit_word_send
+00000B58: E3A06010    ;     MOV     R6, #Terminal_Data
+00000B5C: E7850006    ;     STR     R0, [R5, R6]
+00000B60: E8BD807E    ;     POP     {R1-R6, PC}     
+00000B64:             ; ; if full place on buffer 
+00000B64:             ; ; activate interrupt
+00000B64:             ; 
+00000B64:             ; 
+00000B64:             ;  
+00000B64:             ; 
+00000B64:             ; 
+00000B64:             ; GET Contest_Switching.s
+00000B64:             ; ; File who does c
+00000B64:             ; 
+00000B64:             ; Context_Switch
+00000B64: EA00000C    ;     B       Context_Store
+00000B68:             ; Context_Switch_Store_Return
+00000B68:             ;     ; no need to protect registers since they will be overwritten later anyway 
+00000B68: E24F1F71    ;     ADRL    R1, current_process  
+00000B6C: E2411B02    ; 
+00000B70: E5111000    ;     LDR     R1, [R1]
+00000B74: E24F0F73    ;     ADRL    R0, sheduler_ready_list_start  
+00000B78: E2400B02    ; 
+00000B7C: EB000128    ;     BL      linked_list_add
+00000B80: E24F0F76    ;     ADRL    R0, sheduler_ready_list_start  
+00000B84: E2400B02    ; 
+00000B88: EB000130    ;     BL      linked_list_get 
+00000B8C:             ; 
+00000B8C: E24F0F7A    ;     ADRL    R0, current_process  
+00000B90: E2400B02    ; 
+00000B94: E5001000    ;     STR     R1, [R0]
+00000B98: EA000009    ;     B Context_Load
+00000B9C:             ; 
+00000B9C:             ; 
+00000B9C:             ; Context_Store 
+00000B9C: E96D6001    ;     PUSH    {R0, SP, LR}^
+00000BA0: E24F0F7F    ;     ADRL    R0, current_process
 00000BA4: E2400B02    ; 
-00000BA8: EB000146    ;     BL      linked_list_add
-00000BAC: E24F0F7E    ;     ADRL    R0, sheduler_ready_list_start  
-00000BB0: E2400B02    ; 
-00000BB4: EB00014E    ;     BL      linked_list_get 
-00000BB8:             ; 
-00000BB8: E24F0F82    ;     ADRL    R0, current_process  
-00000BBC: E2400B02    ; 
-00000BC0: E5001000    ;     STR     R1, [R0]
-00000BC4: EA000009    ;     B Context_Load
-00000BC8:             ; 
-00000BC8:             ; 
-00000BC8:             ; Context_Store 
-00000BC8: E96D6001    ;     PUSH    {R0, SP, LR}^
-00000BCC: E24F0F87    ;     ADRL    R0, current_process
-00000BD0: E2400B02    ; 
-00000BD4: E5100000    ;     LDR     R0, [R0] ; get current process handler address 
-00000BD8: E280000C    ;     ADD     R0, R0, #context_switch_pointer
-00000BDC: E9005FFE    ;     STMDB   R0, {R1-R12, LR}
-00000BE0: E8BD000E    ;     POP     {R1-R3}
-00000BE4: E14F4000    ;     MRS     R4, SPSR
-00000BE8: E880001E    ;     STMIA   R0, {R1-R4}
-00000BEC: EAFFFFE8    ;     B Context_Switch_Store_Return 
-00000BF0:             ; 
-00000BF0:             ; Context_Load
-00000BF0: E24F0D29    ;     ADRL    R0, current_process
-00000BF4: E5100000    ;     LDR     R0, [R0] ; get current process handler address 
-00000BF8: E280100C    ;     ADD     R1, R0, #context_switch_pointer
-00000BFC: E891001D    ;     LDMIA   R1, {R0, R2, R3, R4}
-00000C00: E16FF004    ;     MSR     SPSR, R4
-00000C04: E92D000C    ;     PUSH    {R2, R3}
-00000C08: E8FD6000    ;     POP     {SP, LR}^
-00000C0C: E9519FFE    ;     LDMDB   R1, {R1-R12, PC}^
-00000C10:             ; 
-00000C10:             ; GET memory_management.s
-00000C10:             ; ; This file contains the functions for allocating and freeing memoery requested by user process
+00000BA8: E5100000    ;     LDR     R0, [R0] ; get current process handler address 
+00000BAC: E2800044    ;     ADD     R0, R0, #context_switch_pointer
+00000BB0: E9005FFE    ;     STMDB   R0, {R1-R12, LR}
+00000BB4: E8BD000E    ;     POP     {R1-R3}
+00000BB8: E14F4000    ;     MRS     R4, SPSR
+00000BBC: E880001E    ;     STMIA   R0, {R1-R4}
+00000BC0: EAFFFFE8    ;     B Context_Switch_Store_Return 
+00000BC4:             ; 
+00000BC4:             ; Context_Load
+00000BC4: E24F0EA2    ;     ADRL    R0, current_process
+00000BC8: E5100000    ;     LDR     R0, [R0] ; get current process handler address 
+00000BCC: E2801044    ;     ADD     R1, R0, #context_switch_pointer
+00000BD0: E891001D    ;     LDMIA   R1, {R0, R2, R3, R4}
+00000BD4: E16FF004    ;     MSR     SPSR, R4
+00000BD8: E92D000C    ;     PUSH    {R2, R3}
+00000BDC: E8FD6000    ;     POP     {SP, LR}^
+00000BE0: E9519FFE    ;     LDMDB   R1, {R1-R12, PC}^
+00000BE4:             ; 
+00000BE4:             ; GET memory_management.s
+00000BE4:             ; ; This file contains the functions for allocating and freeing memoery requested by user process
                       ; es from the system 
-00000C10:             ; 
-00000C10:             ; ; Function to request memory 
-00000C10:             ; ; Input 
-00000C10:             ; ;   size of memory requested 
-00000C10:             ;     ; divide memory request by 512 
-00000C10:             ; 
-00000C10:             ; ; function to release memeory 
-00000C10:             ; 
-00000C10:             ; ; paging info 
-00000C10:             ; 
-00000C10:             ; memory_request
-00000C10:             ; ; Function to request memory 
-00000C10:             ; ; Registers used 
-00000C10:             ; ;   R4, holds address page 
-00000C10:             ; ;   R5, counter 
-00000C10:             ; ;   R6, pointer of start of scan
-00000C10:             ; ; Input 
-00000C10:             ; ;   R0 number of pages requested
-00000C10:             ;     
-00000C10:             ;     ; look in table if amout of pages is avaiable
-00000C10: E92D40F0    ;     PUSH    {R4-R7, LR}
-00000C14: E28F40D0    ;     ADRL    R4, Page_Table_Start
-00000C18: E3A05000    ;     MOV     R5, #0
-00000C1C: E28F60C8    ;     ADRL    R6, Page_Table_Start
-00000C20:             ;     ; Load state of page 
-00000C20:             ; Reserve_Space_loop
-00000C20: E5141000    ;     LDR    R1, [R4]
-00000C24:             ;     ; if null increment counter
-00000C24: E3510000    ;     CMP     R1, #0 
-00000C28: 02855001    ;     ADDEQ   R5, R5, #1
-00000C2C: 13A05000    ;     MOVNE   R5, #0
-00000C30: 01550000    ;     CMPEQ   R5, R0          
-00000C34: 0A000002    ;     BEQ     Reserve_Page
-00000C38: E2844004    ;     ADD     R4, R4, #4
-00000C3C: 1AFFFFF7    ;     BNE     Reserve_Space_loop 
-00000C40: EAFFFFFE    ;     he b he
-00000C44:             ; Reserve_Page 
-00000C44: E3A07000    ;     MOV     R7, #0 
-00000C48: E24F5FA6    ;     ADRL    R5, current_process 
-00000C4C: E2455B02    ; 
-00000C50: E5155000    ;     LDR     R5, [R5]
-00000C54:             ; Reserve_Page_Loop
-00000C54: E5045000    ;     STR     R5, [R4]
-00000C58: E5146000    ;     LDR     R6, [R4]
-00000C5C: E2877001    ;     ADD     R7, R7, #1
-00000C60: E1570000    ;     CMP     R7, R0 
-00000C64: 12444004    ;     SUBNE   R4, R4, #4
-00000C68: 1AFFFFF9    ;     BNE     Reserve_Page_Loop
-00000C6C: E1A00004    ;     MOV     R0, R4
-00000C70: E1A00480    ;     LSL     R0, R0, #9
-00000C74: E8BD80F0    ;     POP     {R4-R7, PC}
-00000C78:             ; 
-00000C78:             ; 
-00000C78:             ; memory_free 
-00000C78:             ; ; Inputs 
-00000C78:             ; ;   R0 pointer to start of memory to free 
-00000C78:             ; ;   R1 number of pages being freed 
-00000C78:             ; ; Outputs
-00000C78:             ; ;   R0 1 on success and 0 on failure
-00000C78:             ;     
-00000C78: E92D4030    ;     PUSH    {R4-R5, LR}
-00000C7C: E1A004A0    ;     LSR     R0, R0, #9
-00000C80: E3A0E000    ;     MOV     R14, #0 
-00000C84: E24F4FB5    ;     ADRL    R4, current_process
-00000C88: E2444B02    ; 
-00000C8C: E5144000    ;     LDR     R4, [R4]
-00000C90:             ; memory_free_loop
-00000C90: E5105000    ;     LDR     R5, [R0]
-00000C94: E1550004    ;     CMP     R5, R4
-00000C98: 1A000006    ;     BNE     memory_free_failure
-00000C9C: E500E000    ;     STR     R14, [R0]
-00000CA0: E2411001    ;     SUB     R1, R1, #1 
-00000CA4: E3510000    ;     CMP     R1, #0 
-00000CA8: 12800004    ;     ADDNE   R0, R0, #4
-00000CAC: 1AFFFFF7    ;     BNE     memory_free_loop
-00000CB0: E3A00000    ;     MOV     R0, #0 
-00000CB4: E8BD8030    ;     POP     {R4-R5, PC}
-00000CB8:             ; 
-00000CB8:             ; memory_free_failure
-00000CB8: E3A00001    ;     MOV     R0, #1 
-00000CBC: E8BD8030    ;     POP     {R4-R5, PC}
+00000BE4:             ; 
+00000BE4:             ; ; Function to request memory 
+00000BE4:             ; ; Input 
+00000BE4:             ; ;   size of memory requested 
+00000BE4:             ;     ; divide memory request by 512 
+00000BE4:             ; 
+00000BE4:             ; ; function to release memeory 
+00000BE4:             ; 
+00000BE4:             ; ; paging info 
+00000BE4:             ; 
+00000BE4:             ; memory_request
+00000BE4:             ; ; Function to request memory 
+00000BE4:             ; ; Registers used 
+00000BE4:             ; ;   R4, holds address page 
+00000BE4:             ; ;   R5, counter 
+00000BE4:             ; ;   R6, pointer of start of scan
+00000BE4:             ; ; Input 
+00000BE4:             ; ;   R0 number of pages requested
+00000BE4:             ;     
+00000BE4:             ;     ; look in table if amout of pages is avaiable
+00000BE4: E92D40F0    ;     PUSH    {R4-R7, LR}
+00000BE8: E28F40D0    ;     ADRL    R4, Page_Table_Start
+00000BEC: E3A05000    ;     MOV     R5, #0
+00000BF0: E28F60C8    ;     ADRL    R6, Page_Table_Start
+00000BF4:             ;     ; Load state of page 
+00000BF4:             ; Reserve_Space_loop
+00000BF4: E5141000    ;     LDR    R1, [R4]
+00000BF8:             ;     ; if null increment counter
+00000BF8: E3510000    ;     CMP     R1, #0 
+00000BFC: 02855001    ;     ADDEQ   R5, R5, #1
+00000C00: 13A05000    ;     MOVNE   R5, #0
+00000C04: 01550000    ;     CMPEQ   R5, R0          
+00000C08: 0A000002    ;     BEQ     Reserve_Page
+00000C0C: E2844004    ;     ADD     R4, R4, #4
+00000C10: 1AFFFFF7    ;     BNE     Reserve_Space_loop 
+00000C14: EAFFFFFE    ;     he b he
+00000C18:             ; Reserve_Page 
+00000C18: E3A07000    ;     MOV     R7, #0 
+00000C1C: E24F5F9E    ;     ADRL    R5, current_process 
+00000C20: E2455B02    ; 
+00000C24: E5155000    ;     LDR     R5, [R5]
+00000C28:             ; Reserve_Page_Loop
+00000C28: E5045000    ;     STR     R5, [R4]
+00000C2C: E5146000    ;     LDR     R6, [R4]
+00000C30: E2877001    ;     ADD     R7, R7, #1
+00000C34: E1570000    ;     CMP     R7, R0 
+00000C38: 12444004    ;     SUBNE   R4, R4, #4
+00000C3C: 1AFFFFF9    ;     BNE     Reserve_Page_Loop
+00000C40: E1A00004    ;     MOV     R0, R4
+00000C44: E1A00480    ;     LSL     R0, R0, #9
+00000C48: E8BD80F0    ;     POP     {R4-R7, PC}
+00000C4C:             ; 
+00000C4C:             ; 
+00000C4C:             ; memory_free 
+00000C4C:             ; ; Inputs 
+00000C4C:             ; ;   R0 pointer to start of memory to free 
+00000C4C:             ; ;   R1 number of pages being freed 
+00000C4C:             ; ; Outputs
+00000C4C:             ; ;   R0 1 on success and 0 on failure
+00000C4C:             ;     
+00000C4C: E92D4030    ;     PUSH    {R4-R5, LR}
+00000C50: E1A004A0    ;     LSR     R0, R0, #9
+00000C54: E3A0E000    ;     MOV     R14, #0 
+00000C58: E24F4FAD    ;     ADRL    R4, current_process
+00000C5C: E2444B02    ; 
+00000C60: E5144000    ;     LDR     R4, [R4]
+00000C64:             ; memory_free_loop
+00000C64: E5105000    ;     LDR     R5, [R0]
+00000C68: E1550004    ;     CMP     R5, R4
+00000C6C: 1A000006    ;     BNE     memory_free_failure
+00000C70: E500E000    ;     STR     R14, [R0]
+00000C74: E2411001    ;     SUB     R1, R1, #1 
+00000C78: E3510000    ;     CMP     R1, #0 
+00000C7C: 12800004    ;     ADDNE   R0, R0, #4
+00000C80: 1AFFFFF7    ;     BNE     memory_free_loop
+00000C84: E3A00000    ;     MOV     R0, #0 
+00000C88: E8BD8030    ;     POP     {R4-R5, PC}
+00000C8C:             ; 
+00000C8C:             ; memory_free_failure
+00000C8C: E3A00001    ;     MOV     R0, #1 
+00000C90: E8BD8030    ;     POP     {R4-R5, PC}
+00000C94:             ; 
+00000C94:             ; memory_clean 
+00000C94:             ; ; Input 
+00000C94:             ; ;   R0 - Process ID
+00000C94: E92D40F0    ;     PUSH    {R4-R7, LR}
+00000C98: E28F4020    ;     ADRL    R4, Page_Table_Start
+00000C9C: E28F505C    ;     ADRL    R5, Page_Table_End
+00000CA0: E3A06000    ;     MOV     R6, #0
+00000CA4:             ; memory_clean_loop
+00000CA4: E5147000    ;     LDR     R7, [R4]
+00000CA8: E1570000    ;     CMP     R7, R0
+00000CAC: 05046000    ;     STREQ   R6, [R4]
+00000CB0: E1540005    ;     CMP     R4, R5
+00000CB4: 12844004    ;     ADDNE   R4, R4, #4 
+00000CB8: 1AFFFFF9    ;     BNE     memory_clean_loop
+00000CBC: E8BD80F0    ;     POP     {R4-R7, PC}
 00000CC0:             ; 
-00000CC0:             ; memory_clean 
-00000CC0:             ; ; Input 
-00000CC0:             ; ;   R0 - Process ID
-00000CC0: E92D40F0    ;     PUSH    {R4-R7, LR}
-00000CC4: E28F4020    ;     ADRL    R4, Page_Table_Start
-00000CC8: E28F505C    ;     ADRL    R5, Page_Table_End
-00000CCC: E3A06000    ;     MOV     R6, #0
-00000CD0:             ; memory_clean_loop
-00000CD0: E5147000    ;     LDR     R7, [R4]
-00000CD4: E1570000    ;     CMP     R7, R0
-00000CD8: 05046000    ;     STREQ   R6, [R4]
-00000CDC: E1540005    ;     CMP     R4, R5
-00000CE0: 12844004    ;     ADDNE   R4, R4, #4 
-00000CE4: 1AFFFFF9    ;     BNE     memory_clean_loop
-00000CE8: E8BD80F0    ;     POP     {R4-R7, PC}
-00000CEC:             ; 
-00000CEC:             ; 
-00000CEC:             ; 
-00000CEC:             ; 
-00000CEC:             ; Page_Table_Start 
+00000CC0:             ; 
+00000CC0:             ; 
+00000CC0:             ; 
+00000CC0:             ; Page_Table_Start 
+00000CC0: 00000000    ;     DEFW 0 
+00000CC4: 00000000    ;     DEFW 0 
+00000CC8: 00000000    ;     DEFW 0 
+00000CCC: 00000000    ;     DEFW 0 
+00000CD0: 00000000    ;     DEFW 0 
+00000CD4: 00000000    ;     DEFW 0 
+00000CD8: 00000000    ;     DEFW 0 
+00000CDC: 00000000    ;     DEFW 0 
+00000CE0: 00000000    ;     DEFW 0 
+00000CE4: 00000000    ;     DEFW 0 
+00000CE8: 00000000    ;     DEFW 0 
 00000CEC: 00000000    ;     DEFW 0 
 00000CF0: 00000000    ;     DEFW 0 
 00000CF4: 00000000    ;     DEFW 0 
 00000CF8: 00000000    ;     DEFW 0 
 00000CFC: 00000000    ;     DEFW 0 
-00000D00: 00000000    ;     DEFW 0 
-00000D04: 00000000    ;     DEFW 0 
-00000D08: 00000000    ;     DEFW 0 
-00000D0C: 00000000    ;     DEFW 0 
-00000D10: 00000000    ;     DEFW 0 
-00000D14: 00000000    ;     DEFW 0 
-00000D18: 00000000    ;     DEFW 0 
-00000D1C: 00000000    ;     DEFW 0 
-00000D20: 00000000    ;     DEFW 0 
-00000D24: 00000000    ;     DEFW 0 
-00000D28: 00000000    ;     DEFW 0 
-00000D2C:             ; Page_Table_End
-00000D2C:             ; 
-00000D2C:             ; GET sheduler.s
-00000D2C:             ; ; this file contains the sheduler for the OS 
-00000D2C:             ; 
-00000D2C:             ; 
-00000D2C:             ; Shedule_Add 
-00000D2C:             ; ; find the last item on the lest 
-00000D2C: E92D4000    ;     PUSH    {LR}
-00000D30:             ; 
-00000D30:             ;     ; Check that the current process is the terminal handler 
-00000D30: E24F4D2E    ;     ADRL    R4, current_process
-00000D34: E5144000    ;     LDR     R4, [R4]
-00000D38: E28F50C8    ;     ADRL    R5, Terminal_Handler_Process
-00000D3C: E2855B01    ; 
-00000D40: E1540005    ;     CMP     R4, R5                      ; This is so that user level process cannot add to the 
+00000D00:             ; Page_Table_End
+00000D00:             ; 
+00000D00:             ; GET sheduler.s
+00000D00:             ; ; this file contains the sheduler for the OS 
+00000D00:             ; 
+00000D00:             ; 
+00000D00:             ; Shedule_Add 
+00000D00:             ; ; find the last item on the lest 
+00000D00: E92D4000    ;     PUSH    {LR}
+00000D04:             ; 
+00000D04:             ;     ; Check that the current process is the terminal handler 
+00000D04: E24F4EB6    ;     ADRL    R4, current_process
+00000D08: E5144000    ;     LDR     R4, [R4]
+00000D0C: E28F5E45    ;     ADRL    R5, Terminal_Handler_Process
+00000D10: E1540005    ;     CMP     R4, R5                      ; This is so that user level process cannot add to the 
                       ; sheduler with the exheption of terminal handler
-00000D44: 1A00000B    ;     BNE     Shedule_Add_Prohibited
-00000D48: E24F0FE5    ;     ADRL    R0, sheduler_ready_list_start
-00000D4C: E2400B02    ; 
-00000D50: EB0000DC    ;     BL      linked_list_add
-00000D54: E8BD8000    ;     POP     {PC}
-00000D58:             ; 
-00000D58:             ; Shedule_Add_kernal
-00000D58: E24FEFE9    ;     ADRL    R14, sheduler_ready_list_start
-00000D5C: E24EEB02    ; 
-00000D60:             ; Shedule_Add_Loop    
-00000D60: E59EE000    ;     LDR     R14, [R14, #pointer_next]
-00000D64: E35E0000    ;     CMP     R14, #0 
-00000D68: 1AFFFFFC    ;     BNE     Shedule_Add_Loop
-00000D6C: E24FEFEE    ;     ADRL    R14, sheduler_ready_list_start    
-00000D70: E24EEB02    ; 
-00000D74: E58E0000    ;     STR     R0, [R14, #pointer_next]
-00000D78:             ; Shedule_Add_Prohibited
-00000D78: E8BD8000    ;     POP     {PC}
-00000D7C:             ; 
-00000D7C:             ; 
-00000D7C:             ; Shedule_Get_Next 
-00000D7C:             ; ; check if there is anything else on the shedule 
-00000D7C: E92D0010    ;     PUSH    {R4}
-00000D80: E24F4FF3    ;     ADRL    R4, sheduler_ready_list_start
-00000D84: E2444B02    ; 
-00000D88: E5144000    ;     LDR     R4, [R4]
-00000D8C: E3540000    ;     CMP     R4, #0
-00000D90: 0A000001    ;     BEQ     Shedule_Empty
-00000D94: E8BD0010    ;     POP     {R4}
-00000D98: EAFFFF7C    ;     B       Context_Switch
-00000D9C:             ;     ; 
-00000D9C:             ; Shedule_Empty
-00000D9C: E8BD0010    ;     POP     {R4}
-00000DA0: E1B0F00E    ;     MOVS    PC, LR
-00000DA4:             ; 
-00000DA4:             ; ;
-00000DA4:             ; 
-00000DA4:             ; GET Kernal_LED.s
-00000DA4:             ; ; this file contains the supervsior level function needed to drive the LEDS 
-00000DA4:             ; 
-00000DA4: 00000000    ; LED_Owner DEFW 0
-00000DA8:             ; 
-00000DA8:             ; Set_LED 
-00000DA8:             ;     ;Check owenership of LEDS 
-00000DA8: E92D4030    ;     PUSH    {R4, R5, LR}
-00000DAC: E24F4010    ;     ADRL    R4, LED_Owner
-00000DB0: E5144000    ;     LDR     R4, [R4]
-00000DB4: E3540000    ;     CMP     R4, #0
-00000DB8:             ;     ; if not reserve it 
-00000DB8: 0A00000E    ;     BEQ     Reserve_LED
-00000DBC:             ;     ; check if the proccess has reserved the LCD 
-00000DBC: E24F500C    ;     ADRL    R5, current_process
-00000DC0: E2455B03    ; 
-00000DC4: E5155000    ;     LDR     R5, [R5]
-00000DC8: E1540005    ;     CMP     R4, R5
-00000DCC: 1A00000F    ;     BNE     LEDInUse
-00000DD0:             ; 
-00000DD0:             ; Set_LED_Main
-00000DD0: E92D0040    ;     PUSH    {R6}
-00000DD4: E3A04201    ;     MOV     R4, #Port_Area
-00000DD8: E5945004    ;     LDR     R5, [R4, #Port_B]
+00000D14: 1A000009    ;     BNE     Shedule_Add_Prohibited
+00000D18: E24F0EB7    ;     ADRL    R0, sheduler_ready_list_start
+00000D1C: EB0000C0    ;     BL      linked_list_add
+00000D20: E8BD8000    ;     POP     {PC}
+00000D24:             ; 
+00000D24:             ; Shedule_Add_kernal
+00000D24: E24FEFDF    ;     ADRL    R14, sheduler_ready_list_start
+00000D28: E24EEB02    ; 
+00000D2C:             ; Shedule_Add_Loop    
+00000D2C: E59EE000    ;     LDR     R14, [R14, #pointer_next]
+00000D30: E35E0000    ;     CMP     R14, #0 
+00000D34: 1AFFFFFC    ;     BNE     Shedule_Add_Loop
+00000D38: E24FEEB9    ;     ADRL    R14, sheduler_ready_list_start    
+00000D3C: E58E0000    ;     STR     R0, [R14, #pointer_next]
+00000D40:             ; Shedule_Add_Prohibited
+00000D40: E8BD8000    ;     POP     {PC}
+00000D44:             ; 
+00000D44:             ; 
+00000D44:             ; Shedule_Get_Next 
+00000D44:             ; ; check if there is anything else on the shedule 
+00000D44: E92D0010    ;     PUSH    {R4}
+00000D48: E24F4EBA    ;     ADRL    R4, sheduler_ready_list_start
+00000D4C: E5144000    ;     LDR     R4, [R4]
+00000D50: E3540000    ;     CMP     R4, #0
+00000D54: 0A000001    ;     BEQ     Shedule_Empty
+00000D58: E8BD0010    ;     POP     {R4}
+00000D5C: EAFFFF80    ;     B       Context_Switch
+00000D60:             ;     ; 
+00000D60:             ; Shedule_Empty
+00000D60: E8BD0010    ;     POP     {R4}
+00000D64: E1B0F00E    ;     MOVS    PC, LR
+00000D68:             ; 
+00000D68:             ; ;
+00000D68:             ; 
+00000D68:             ; GET Kernal_LED.s
+00000D68:             ; ; this file contains the supervsior level function needed to drive the LEDS 
+00000D68:             ; 
+00000D68: 00000000    ; LED_Owner DEFW 0
+00000D6C:             ; 
+00000D6C:             ; Set_LED 
+00000D6C:             ;     ;Check owenership of LEDS 
+00000D6C: E92D4030    ;     PUSH    {R4, R5, LR}
+00000D70: E24F4010    ;     ADRL    R4, LED_Owner
+00000D74: E5144000    ;     LDR     R4, [R4]
+00000D78: E3540000    ;     CMP     R4, #0
+00000D7C:             ;     ; if not reserve it 
+00000D7C: 0A00000E    ;     BEQ     Reserve_LED
+00000D80:             ;     ; check if the proccess has reserved the LCD 
+00000D80: E24F5FF7    ;     ADRL    R5, current_process
+00000D84: E2455B02    ; 
+00000D88: E5155000    ;     LDR     R5, [R5]
+00000D8C: E1540005    ;     CMP     R4, R5
+00000D90: 1A00000F    ;     BNE     LEDInUse
+00000D94:             ; 
+00000D94:             ; Set_LED_Main
+00000D94: E92D0040    ;     PUSH    {R6}
+00000D98: E3A04201    ;     MOV     R4, #Port_Area
+00000D9C: E5945004    ;     LDR     R5, [R4, #Port_B]
+00000DA0:             ; 
+00000DA0:             ;     ; Enable LEDs 
+00000DA0: E2055010    ;     AND     R5, R5, #LED_On
+00000DA4: E5845004    ;     STR     R5, [R4, #Port_B]
+00000DA8:             ;     ; update LEDS 
+00000DA8: E5146000    ;     LDR     R6, [R4]
+00000DAC: E0066000    ;     AND     R6, R6, R0 
+00000DB0: E0266001    ;     EOR     R6, R6, R1
+00000DB4: E5846000    ;     STR     R6, [R4, #Port_A]
+00000DB8: E8BD8070    ;     POP     {R4, R5, R6, PC}
+00000DBC:             ; 
+00000DBC:             ; Reserve_LED
+00000DBC: E28F4018    ;     ADRL    R4, LCD_Owner
+00000DC0: E24F501C    ;     ADRL    R5, current_process
+00000DC4: E2455B03    ; 
+00000DC8: E5155000    ;     LDR     R5, [R5]
+00000DCC: E5045000    ;     STR     R5, [R4]
+00000DD0: EAFFFFEF    ;     B       Set_LED_Main
+00000DD4:             ; LEDInUse  
+00000DD4: E3A02001    ;     MOV     R2, #1
+00000DD8: E8BD8030    ;     POP     {R4, R5, PC}
 00000DDC:             ; 
-00000DDC:             ;     ; Enable LEDs 
-00000DDC: E2055010    ;     AND     R5, R5, #LED_On
-00000DE0: E5845004    ;     STR     R5, [R4, #Port_B]
-00000DE4:             ;     ; update LEDS 
-00000DE4: E5146000    ;     LDR     R6, [R4]
-00000DE8: E0066000    ;     AND     R6, R6, R0 
-00000DEC: E0266001    ;     EOR     R6, R6, R1
-00000DF0: E5846000    ;     STR     R6, [R4, #Port_A]
-00000DF4: E8BD8070    ;     POP     {R4, R5, R6, PC}
-00000DF8:             ; 
-00000DF8:             ; Reserve_LED
-00000DF8: E28F4018    ;     ADRL    R4, LCD_Owner
-00000DFC: E24F504C    ;     ADRL    R5, current_process
-00000E00: E2455B03    ; 
-00000E04: E5155000    ;     LDR     R5, [R5]
-00000E08: E5045000    ;     STR     R5, [R4]
-00000E0C: EAFFFFEF    ;     B       Set_LED_Main
-00000E10:             ; LEDInUse  
-00000E10: E3A02001    ;     MOV     R2, #1
-00000E14: E8BD8030    ;     POP     {R4, R5, PC}
-00000E18:             ; 
-00000E18:             ; GET peripherals.s
-00000E18:             ; ; This file contains the function responsible for accessing the peripherals on the Lab board 
-00000E18:             ; 
-00000E18:             ; ; variables 
-00000E18:             ; 
-00000E18: 00000000    ; LCD_Owner DEFW 0
-00000E1C:             ; 
-00000E1C:             ; SVC_printChar
-00000E1C: E92D4030    ;     PUSH    {R4,R5, LR}
-00000E20: E3A02000    ;     MOV     R2, #0
-00000E24:             ;     ; code to check if the LCD is reserved 
-00000E24: E24F4014    ;     ADRL    R4, LCD_Owner
-00000E28: E5144000    ;     LDR     R4, [R4]
-00000E2C: E3540000    ;     CMP     R4, #0
-00000E30:             ;     ; if not reserve it 
-00000E30: 0A00002A    ;     BEQ     Reserve_LCD
-00000E34:             ;     ; check if the proccess has reserved the LCD 
-00000E34: E24F5084    ;     ADRL    R5, current_process
-00000E38: E2455B03    ; 
-00000E3C: E5155000    ;     LDR     R5, [R5]
-00000E40: E1540005    ;     CMP     R4, R5
-00000E44: 1A00002B    ;     BNE     LCDInUse
+00000DDC:             ; GET peripherals.s
+00000DDC:             ; ; This file contains the function responsible for accessing the peripherals on the Lab board 
+00000DDC:             ; 
+00000DDC:             ; ; variables 
+00000DDC:             ; 
+00000DDC: 00000000    ; LCD_Owner DEFW 0
+00000DE0:             ; 
+00000DE0:             ; SVC_printChar
+00000DE0: E92D4030    ;     PUSH    {R4,R5, LR}
+00000DE4: E3A02000    ;     MOV     R2, #0
+00000DE8:             ;     ; code to check if the LCD is reserved 
+00000DE8: E24F4014    ;     ADRL    R4, LCD_Owner
+00000DEC: E5144000    ;     LDR     R4, [R4]
+00000DF0: E3540000    ;     CMP     R4, #0
+00000DF4:             ;     ; if not reserve it 
+00000DF4: 0A00002A    ;     BEQ     Reserve_LCD
+00000DF8:             ;     ; check if the proccess has reserved the LCD 
+00000DF8: E24F5054    ;     ADRL    R5, current_process
+00000DFC: E2455B03    ; 
+00000E00: E5155000    ;     LDR     R5, [R5]
+00000E04: E1540005    ;     CMP     R4, R5
+00000E08: 1A00002B    ;     BNE     LCDInUse
+00000E0C:             ; 
+00000E0C:             ;     ; else return failure to print 
+00000E0C:             ; printChar_Status
+00000E0C:             ;     ; check if LCD is ready 
+00000E0C:             ;     ; Set LCD to get ready state of LCD 
+00000E0C: E3A04201    ;     MOV     R4, #Port_Area
+00000E10: E5D45004    ;     LDRB    R5, [R4, #Port_B]
+00000E14: E3C55002    ;     BIC     R5, R5, #RS_Bit      ; Sets Port_A In/Out to control Register
+00000E18: E3855004    ;     ORR     R5, R5, #RW_Bit      ; Sets to Read from LCD
+00000E1C: E3C55010    ;     BIC     R5, R5, #LED_On
+00000E20: E5C45004    ;     STRB    R5, [R4, #Port_B]     ; Sends updated instructions to Port_B
+00000E24:             ; 
+00000E24:             ;     ; Set E High  
+00000E24: E5D45004    ;     LDRB    R5, [R4, #Port_B]     ; Gets value of Port_B and stores it in R4
+00000E28: E3855001    ;     ORR     R5, R5, #E_En         ; Sets LCD Enable Bus high
+00000E2C: E5C45004    ;     STRB    R5, [R4, #Port_B]     ; Sends updated instructions to Port_B
+00000E30:             ; 
+00000E30:             ;     ; Get status of LCD 
+00000E30: E5D45000    ;     LDRB    R5, [R4, #Port_A]     ; Get Status of LCD
+00000E34: E2055080    ;     AND     R5, R5, #LCD_Ready_Status      
+00000E38:             ; 
+00000E38:             ;     ; set E Low 
+00000E38: E5D45004    ;     LDRB    R5, [R4, #Port_B]     ; Gets value of Port_B and stores it in R4
+00000E3C: E3C55001    ;     BIC     R5, R5, #E_En         ; Sets LCD Enable Bus high
+00000E40: E2055010    ;     AND     R5, R5, #LED_On
+00000E44: E5C45004    ;     STRB    R5, [R4, #Port_B]     ; Sends updated instructions to Port_B
 00000E48:             ; 
-00000E48:             ;     ; else return failure to print 
-00000E48:             ; printChar_Status
-00000E48:             ;     ; check if LCD is ready 
-00000E48:             ;     ; Set LCD to get ready state of LCD 
-00000E48: E3A04201    ;     MOV     R4, #Port_Area
-00000E4C: E5D45004    ;     LDRB    R5, [R4, #Port_B]
-00000E50: E3C55002    ;     BIC     R5, R5, #RS_Bit      ; Sets Port_A In/Out to control Register
-00000E54: E3855004    ;     ORR     R5, R5, #RW_Bit      ; Sets to Read from LCD
-00000E58: E3C55010    ;     BIC     R5, R5, #LED_On
-00000E5C: E5C45004    ;     STRB    R5, [R4, #Port_B]     ; Sends updated instructions to Port_B
-00000E60:             ; 
-00000E60:             ;     ; Set E High  
-00000E60: E5D45004    ;     LDRB    R5, [R4, #Port_B]     ; Gets value of Port_B and stores it in R4
-00000E64: E3855001    ;     ORR     R5, R5, #E_En         ; Sets LCD Enable Bus high
-00000E68: E5C45004    ;     STRB    R5, [R4, #Port_B]     ; Sends updated instructions to Port_B
-00000E6C:             ; 
-00000E6C:             ;     ; Get status of LCD 
-00000E6C: E5D45000    ;     LDRB    R5, [R4, #Port_A]     ; Get Status of LCD
-00000E70: E2055080    ;     AND     R5, R5, #LCD_Ready_Status      
-00000E74:             ; 
-00000E74:             ;     ; set E Low 
-00000E74: E5D45004    ;     LDRB    R5, [R4, #Port_B]     ; Gets value of Port_B and stores it in R4
-00000E78: E3C55001    ;     BIC     R5, R5, #E_En         ; Sets LCD Enable Bus high
-00000E7C: E2055010    ;     AND     R5, R5, #LED_On
+00000E48:             ;     ; if not return waiting loop 
+00000E48: E3550000    ;     CMP     R5, #0
+00000E4C: 13A01001    ;     MOVNE   R1, #1
+00000E50: 18BD8030    ;     LDMNEFD SP!, {R4-R5, PC}
+00000E54:             ;     ; if ready 
+00000E54:             ; 
+00000E54:             ;     ; print char
+00000E54:             ; printChar_s
+00000E54:             ;     ; Save state of current LEDS 
+00000E54: E92D00C0    ;     PUSH    {R6,R7} 
+00000E58: E5D46000    ;     LDRB    R6, [R4, #Port_A]
+00000E5C:             ; 
+00000E5C:             ; 
+00000E5C:             ;     ; get LCD ready to recieve char
+00000E5C: E5D45004    ;     LDRB    R5, [R4, #Port_B]
+00000E60: E1A07005    ;     MOV     R7, R5              ; Saves state of interface before sending char
+00000E64: E3855002    ;     ORR     R5, R5, #RS_Bit      ; Sets Port_A In/Out to control Register
+00000E68: E3C55010    ;     BIC     R5, R5, #LED_On
+00000E6C: E3C55004    ;     BIC     R5, R5, #RW_Bit      ; Sets to Read from LCD
+00000E70: E5C45004    ;     STRB    R5, [R4, #Port_B]     ; Sends updated instructions to Port_B
+00000E74:             ;     ; Sent Character to be sent 
+00000E74: E5C40000    ;     STRB    R0, [R4, #Port_A]     ; send character to LCD
+00000E78:             ; 
+00000E78:             ;     ; Pluse E_En
+00000E78:             ;     ; Set E High  
+00000E78: E5D45004    ;     LDRB    R5, [R4, #Port_B]     ; Gets value of Port_B and stores it in R4
+00000E7C: E3855001    ;     ORR     R5, R5, #E_En         ; Sets LCD Enable Bus high
 00000E80: E5C45004    ;     STRB    R5, [R4, #Port_B]     ; Sends updated instructions to Port_B
 00000E84:             ; 
-00000E84:             ;     ; if not return waiting loop 
-00000E84: E3550000    ;     CMP     R5, #0
-00000E88: 13A01001    ;     MOVNE   R1, #1
-00000E8C: 18BD8030    ;     LDMNEFD SP!, {R4-R5, PC}
-00000E90:             ;     ; if ready 
-00000E90:             ; 
-00000E90:             ;     ; print char
-00000E90:             ; printChar_s
-00000E90:             ;     ; Save state of current LEDS 
-00000E90: E92D00C0    ;     PUSH    {R6,R7} 
-00000E94: E5D46000    ;     LDRB    R6, [R4, #Port_A]
-00000E98:             ; 
-00000E98:             ; 
-00000E98:             ;     ; get LCD ready to recieve char
-00000E98: E5D45004    ;     LDRB    R5, [R4, #Port_B]
-00000E9C: E1A07005    ;     MOV     R7, R5              ; Saves state of interface before sending char
-00000EA0: E3855002    ;     ORR     R5, R5, #RS_Bit      ; Sets Port_A In/Out to control Register
-00000EA4: E3C55010    ;     BIC     R5, R5, #LED_On
-00000EA8: E3C55004    ;     BIC     R5, R5, #RW_Bit      ; Sets to Read from LCD
-00000EAC: E5C45004    ;     STRB    R5, [R4, #Port_B]     ; Sends updated instructions to Port_B
-00000EB0:             ;     ; Sent Character to be sent 
-00000EB0: E5C40000    ;     STRB    R0, [R4, #Port_A]     ; send character to LCD
-00000EB4:             ; 
-00000EB4:             ;     ; Pluse E_En
-00000EB4:             ;     ; Set E High  
-00000EB4: E5D45004    ;     LDRB    R5, [R4, #Port_B]     ; Gets value of Port_B and stores it in R4
-00000EB8: E3855001    ;     ORR     R5, R5, #E_En         ; Sets LCD Enable Bus high
-00000EBC: E5C45004    ;     STRB    R5, [R4, #Port_B]     ; Sends updated instructions to Port_B
-00000EC0:             ; 
-00000EC0:             ;     ; set E Low 
-00000EC0: E5D45004    ;     LDRB    R5, [R4, #Port_B]     ; Gets value of Port_B and stores it in R4
-00000EC4: E3C55001    ;     BIC     R5, R5, #E_En         ; Sets LCD Enable Bus LOW
-00000EC8: E5C45004    ;     STRB    R5, [R4, #Port_B]     ; Sends updated instructions to Port_B
-00000ECC:             ;     ; Restore state of interface and LEDS if they had been set
-00000ECC: E5C46000    ;     STRB    R6, [R4, #Port_A]
-00000ED0: E5C47004    ;     STRB    R7, [R4, #Port_B]
-00000ED4: E3A01000    ;     MOV     R1, #0
-00000ED8: E3A02000    ;     MOV     R2, #0
-00000EDC: E8BD80F0    ;     POP     {R4-R7,PC} 
-00000EE0:             ; 
-00000EE0:             ; 
-00000EE0:             ; Reserve_LCD
-00000EE0: E24F40D0    ;     ADRL    R4, LCD_Owner
-00000EE4: E24F5F4D    ;     ADRL    R5, current_process
-00000EE8: E2455B03    ; 
-00000EEC: E5155000    ;     LDR     R5, [R5]
+00000E84:             ;     ; set E Low 
+00000E84: E5D45004    ;     LDRB    R5, [R4, #Port_B]     ; Gets value of Port_B and stores it in R4
+00000E88: E3C55001    ;     BIC     R5, R5, #E_En         ; Sets LCD Enable Bus LOW
+00000E8C: E5C45004    ;     STRB    R5, [R4, #Port_B]     ; Sends updated instructions to Port_B
+00000E90:             ;     ; Restore state of interface and LEDS if they had been set
+00000E90: E5C46000    ;     STRB    R6, [R4, #Port_A]
+00000E94: E5C47004    ;     STRB    R7, [R4, #Port_B]
+00000E98: E3A01000    ;     MOV     R1, #0
+00000E9C: E3A02000    ;     MOV     R2, #0
+00000EA0: E8BD80F0    ;     POP     {R4-R7,PC} 
+00000EA4:             ; 
+00000EA4:             ; 
+00000EA4:             ; Reserve_LCD
+00000EA4: E24F40D0    ;     ADRL    R4, LCD_Owner
+00000EA8: E24F5F41    ;     ADRL    R5, current_process
+00000EAC: E2455B03    ; 
+00000EB0: E5155000    ;     LDR     R5, [R5]
+00000EB4: E5045000    ;     STR     R5, [R4]
+00000EB8: EAFFFFD3    ;     B printChar_Status
+00000EBC:             ; 
+00000EBC:             ; 
+00000EBC:             ; LCDInUse
+00000EBC: E3A02001    ;     MOV     R2, #1 
+00000EC0: E8BD4030    ;     POP     {R4,R5, LR}
+00000EC4:             ; 
+00000EC4:             ; ; Function 2 
+00000EC4:             ; ; send something to a peripheral 
+00000EC4:             ; 
+00000EC4:             ; Release_LCD_Ownership 
+00000EC4:             ;     ; this function releases the ownership of the lcd 
+00000EC4: E92D4030    ;     PUSH    {R4, R5, LR}
+00000EC8:             ;     ; first it checks that this process is the current owner of the LCD 
+00000EC8: E24F40F4    ;     ADRL    R4, LCD_Owner 
+00000ECC: E5144000    ;     LDR     R4, [R4]
+00000ED0: E24F5F4B    ;     ADRL    R5, current_process
+00000ED4: E2455B03    ; 
+00000ED8: E5155000    ;     LDR     R5, [R5]    
+00000EDC: E1540005    ;     CMP     R4, R5      ; make sure current process is the owner 
+00000EE0: 13A00001    ;     MOVNE   R0, #1
+00000EE4: 18BD8030    ;     LDMNEFD SP!, {R4-R5, PC} 
+00000EE8: E24F4F45    ;     ADRL    R4, LCD_Owner
+00000EEC: E3A05000    ;     MOV     R5, #0 
 00000EF0: E5045000    ;     STR     R5, [R4]
-00000EF4: EAFFFFD3    ;     B printChar_Status
+00000EF4: E8BD8030    ;     POP     {R4, R5, PC}
+00000EF8:             ; 
+00000EF8:             ; Peripheral 
 00000EF8:             ; 
 00000EF8:             ; 
-00000EF8:             ; LCDInUse
-00000EF8: E3A02001    ;     MOV     R2, #1 
-00000EFC: E8BD4030    ;     POP     {R4,R5, LR}
-00000F00:             ; 
-00000F00:             ; ; Function 2 
-00000F00:             ; ; send something to a peripheral 
-00000F00:             ; 
-00000F00:             ; Release_LCD_Ownership 
-00000F00:             ;     ; this function releases the ownership of the lcd 
-00000F00: E92D4030    ;     PUSH    {R4, R5, LR}
-00000F04:             ;     ; first it checks that this process is the current owner of the LCD 
-00000F04: E24F40F4    ;     ADRL    R4, LCD_Owner 
-00000F08: E5144000    ;     LDR     R4, [R4]
-00000F0C: E24F5F57    ;     ADRL    R5, current_process
-00000F10: E2455B03    ; 
-00000F14: E5155000    ;     LDR     R5, [R5]    
-00000F18: E1540005    ;     CMP     R4, R5      ; make sure current process is the owner 
-00000F1C: 13A00001    ;     MOVNE   R0, #1
-00000F20: 18BD8030    ;     LDMNEFD SP!, {R4-R5, PC} 
-00000F24: E24F4F45    ;     ADRL    R4, LCD_Owner
-00000F28: E3A05000    ;     MOV     R5, #0 
-00000F2C: E5045000    ;     STR     R5, [R4]
-00000F30: E8BD8030    ;     POP     {R4, R5, PC}
-00000F34:             ; 
-00000F34:             ; Peripheral 
-00000F34:             ; 
-00000F34:             ; 
-00000F34:             ; 
-00000F34:             ; GET start_Process.s
-00000F34:             ; ; this file contains the code for when a request to start a new process comes from the termnal 
+00000EF8:             ; 
+00000EF8:             ; GET start_Process.s
+00000EF8:             ; ; this file contains the code for when a request to start a new process comes from the termnal 
                       ; handler 
-00000F34:             ; 
-00000F34:             ; Start_Process 
-00000F34:             ;     ; entrance to 
-00000F34:             ;     ; Code to check that it is the terminal handler requesting this 
-00000F34:             ; 
-00000F34:             ;     ; Check that the current process is the terminal handler 
-00000F34: E24F4F61    ;     ADRL    R4, current_process
-00000F38: E2444B03    ; 
-00000F3C: E5144000    ;     LDR     R4, [R4]
-00000F40: E28F5D0B    ;     ADRL    R5, Terminal_Handler_Process
-00000F44: E1540005    ;     CMP     R4, R5                      ; This is so that user level process cannot add to the 
+00000EF8:             ; 
+00000EF8:             ; Start_Process 
+00000EF8:             ;     ; entrance to 
+00000EF8:             ;     ; Code to check that it is the terminal handler requesting this 
+00000EF8:             ; 
+00000EF8:             ;     ; Check that the current process is the terminal handler 
+00000EF8: E24F4F55    ;     ADRL    R4, current_process
+00000EFC: E2444B03    ; 
+00000F00: E5144000    ;     LDR     R4, [R4]
+00000F04: E28F5F96    ;     ADRL    R5, Terminal_Handler_Process
+00000F08: E1540005    ;     CMP     R4, R5                      ; This is so that user level process cannot add to the 
                       ; sheduler with the exheption of terminal handler
-00000F48: 1A000016    ;     BNE     Start_Process_Denied
-00000F4C:             ; 
-00000F4C: E8BD4030    ;     POP     {R4-R5, LR}
-00000F50: E96D6001    ;     PUSH    {R0, SP, LR}^
-00000F54: E24F0F69    ;     ADRL    R0, current_process
-00000F58: E2400B03    ; 
-00000F5C: E5100000    ;     LDR     R0, [R0] ; get current process handler address 
-00000F60: E280000C    ;     ADD     R0, R0, #context_switch_pointer
-00000F64: E9005FFE    ;     STMDB   R0, {R1-R12, LR}
-00000F68: E8BD000E    ;     POP     {R1-R3}
-00000F6C: E14F4000    ;     MRS     R4, SPSR
-00000F70: E880001E    ;     STMIA   R0, {R1-R4}
-00000F74:             ;     
-00000F74:             ;     ; now add the current process to ready list 
-00000F74: E1A04001    ;     MOV     R4, R1
-00000F78: E24F1F72    ;     ADRL    R1, current_process   
-00000F7C: E2411B03    ; 
-00000F80: E5111000    ;     LDR     R1, [R1]
-00000F84: E24F0EDD    ;     ADRL    R0, sheduler_ready_list_start  
-00000F88: EB00004E    ;     BL      linked_list_add
-00000F8C:             ; 
-00000F8C: E24F1F77    ;    ADRL     R1, current_process
-00000F90: E2411B03    ; 
-00000F94: E5014000    ;    STR      R4, [R1]
-00000F98:             ;    
-00000F98: E594E008    ;    LDR      R14, [R4, #process_constructor]
-00000F9C:             ;    ; No need to preserve flags so this makes it easier
-00000F9C: E3A00050    ;    MOV      R0, #User_Mode_With_Int
-00000FA0: E161F000    ;    MSR      SPSR_c, R0 
-00000FA4: E1B0F00E    ;    MOVS     PC, R14 
-00000FA8:             ; 
-00000FA8:             ;     ; then switch to next process 
-00000FA8:             ; Start_Process_Denied
-00000FA8: E8BD8030    ;     POP    {R4-R5, PC}
-00000FAC:             ; 
-00000FAC:             ; GET universal/universal_main.s
-00000FAC:             ; ; This file is used to enable an easy load of all universal files
-00000FAC:             ; 
-00000FAC:             ; GET universal_constants.s 
-00000FAC:             ; ; Constants used by all modes
-00000FAC:             ; 
-00000FAC:             ; ; SVC Codes
-00000FAC:             ; 
-00000FAC:             ; ;EQU &0 
-00000FAC:             ; ;EQU &4
-00000FAC:             ; ;EQU &8
-00000FAC:             ; ;EQU &C 
-00000FAC:             ; ;EQU &10
-00000FAC:             ; ;EQU &14
-00000FAC:             ; 
-00000FAC:             ; Word_Size           EQU &4
-00000FAC:             ; 
-00000FAC:             ; Terminal_Data           EQU &10
-00000FAC:             ; Terminal_Control        EQU &14
-00000FAC:             ; 
-00000FAC:             ; GET data_structures/buffer.s
-00000FAC:             ; ; Buffer Data Structure 
-00000FAC:             ; ; Place in tail 
-00000FAC:             ; ; Retriveve from head
-00000FAC:             ; struct
-00000FAC:             ; buffer_start    word 
-00000FAC:             ; buffer_end      word 
-00000FAC:             ; buffer_head     word
-00000FAC:             ; buffer_tail     word 
-00000FAC:             ; buffer_waiter   word
-00000FAC:             ; buffer_data     alias
-00000FAC:             ;     struct_align  
-00000FAC:             ; 
-00000FAC:             ; ; Functions 
-00000FAC:             ; ; Initialise Buffer 
-00000FAC:             ; buffer_initialise
-00000FAC:             ; ; This function intialises a buffer data structure 
-00000FAC:             ; ; Inputs 
-00000FAC:             ; ;   R0 buffer starting address 
-00000FAC:             ; ;   R1 buffer size in words 
-00000FAC:             ; ;   
-00000FAC: E92D4010    ;     PUSH    {R4, LR}
-00000FB0: E3A02000    ;     MOV     R2, #0
-00000FB4: E2804014    ;     ADD     R4, R0, #buffer_data ; this calculates the start of buffer memory 
-00000FB8: E5804000    ;     STR     R4, [R0, #buffer_start] ; stores start of buffer in start of buffer offset 
-00000FBC: E5804008    ;     STR     R4, [R0, #buffer_head]
-00000FC0: E580400C    ;     STR     R4, [R0, #buffer_tail]
-00000FC4: E5802010    ;     STR     R2, [R0, #buffer_waiter]
-00000FC8: E0804001    ;     ADD     R4, R0, R1  
-00000FCC: E5804004    ;     STR     R4, [R0, #buffer_end]
-00000FD0: E8BD8010    ;     POP     {R4, PC}
-00000FD4:             ; 
-00000FD4:             ; ; Place into buffer
-00000FD4:             ; buffer_put 
-00000FD4:             ; ; This function places a word into the buffer 
-00000FD4:             ; ; Inputs 
-00000FD4:             ; ;   R0 Address of where the buffer starts 
-00000FD4:             ; ;   R1 Word to store 
-00000FD4:             ; ; OutPuts 
-00000FD4:             ; ;   R0 - Returns 0 when it is full 
-00000FD4:             ; 
-00000FD4: E92D40F0    ;     PUSH    {R4-R7, LR}
-00000FD8: E5904008    ;     LDR     R4, [R0, #buffer_head]
-00000FDC: E590500C    ;     LDR     R5, [R0, #buffer_tail] 
-00000FE0:             ; ;   Check if buffer is full 
-00000FE0:             ; ;       Check if head is 1 word infront of tail 
-00000FE0: E2856014    ;     ADD     R6, R5, #buffer_data
-00000FE4: E1560004    ;     CMP     R6, R4
-00000FE8: 0A00000A    ;     BEQ     buffer_full
-00000FEC:             ; ;       check if tail is at bottom of buffer and if so if tail is at base 
-00000FEC: E5906004    ;     LDR     R6, [R0, #buffer_end]
-00000FF0: E1560005    ;     CMP     R6, R5
-00000FF4: 05907000    ;     LDREQ   R7, [R0, #buffer_start]
-00000FF8: 01540007    ;     CMPEQ   R4, R7 
-00000FFC: 0A000005    ;     BEQ     buffer_full 
+00000F0C: 1A000016    ;     BNE     Start_Process_Denied
+00000F10:             ; 
+00000F10: E8BD4030    ;     POP     {R4-R5, LR}
+00000F14: E96D6001    ;     PUSH    {R0, SP, LR}^
+00000F18: E24F0F5D    ;     ADRL    R0, current_process
+00000F1C: E2400B03    ; 
+00000F20: E5100000    ;     LDR     R0, [R0] ; get current process handler address 
+00000F24: E2800044    ;     ADD     R0, R0, #context_switch_pointer
+00000F28: E9005FFE    ;     STMDB   R0, {R1-R12, LR}
+00000F2C: E8BD000E    ;     POP     {R1-R3}
+00000F30: E14F4000    ;     MRS     R4, SPSR
+00000F34: E880001E    ;     STMIA   R0, {R1-R4}
+00000F38:             ;     
+00000F38:             ;     ; now add the current process to ready list 
+00000F38: E1A04001    ;     MOV     R4, R1
+00000F3C: E24F1F66    ;     ADRL    R1, current_process   
+00000F40: E2411B03    ; 
+00000F44: E5111000    ;     LDR     R1, [R1]
+00000F48: E24F0EDA    ;     ADRL    R0, sheduler_ready_list_start  
+00000F4C: EB000034    ;     BL      linked_list_add
+00000F50:             ; 
+00000F50: E24F1F6B    ;    ADRL     R1, current_process
+00000F54: E2411B03    ; 
+00000F58: E5014000    ;    STR      R4, [R1]
+00000F5C:             ;    
+00000F5C: E594E008    ;    LDR      R14, [R4, #process_constructor]
+00000F60:             ;    ; No need to preserve flags so this makes it easier
+00000F60: E3A00050    ;    MOV      R0, #User_Mode_With_Int
+00000F64: E161F000    ;    MSR      SPSR_c, R0 
+00000F68: E1B0F00E    ;    MOVS     PC, R14 
+00000F6C:             ; 
+00000F6C:             ;     ; then switch to next process 
+00000F6C:             ; Start_Process_Denied
+00000F6C: E8BD8030    ;     POP    {R4-R5, PC}
+00000F70:             ; 
+00000F70:             ; GET universal/universal_main.s
+00000F70:             ; ; This file is used to enable an easy load of all universal files
+00000F70:             ; 
+00000F70:             ; GET universal_constants.s 
+00000F70:             ; ; Constants used by all modes
+00000F70:             ; 
+00000F70:             ; ; SVC Codes
+00000F70:             ; 
+00000F70:             ; ;EQU &0 
+00000F70:             ; ;EQU &4
+00000F70:             ; ;EQU &8
+00000F70:             ; ;EQU &C 
+00000F70:             ; ;EQU &10
+00000F70:             ; ;EQU &14
+00000F70:             ; 
+00000F70:             ; Word_Size           EQU &4
+00000F70:             ; 
+00000F70:             ; Terminal_Data           EQU &10
+00000F70:             ; Terminal_Control        EQU &14
+00000F70:             ; 
+00000F70:             ; GET data_structures/buffer.s
+00000F70:             ; ; Buffer Data Structure 
+00000F70:             ; ; Place in tail 
+00000F70:             ; ; Retriveve from head
+00000F70:             ; struct
+00000F70:             ; buffer_start    word 
+00000F70:             ; buffer_end      word 
+00000F70:             ; buffer_head     word
+00000F70:             ; buffer_tail     word 
+00000F70:             ; buffer_waiter   word
+00000F70:             ; buffer_data     alias
+00000F70:             ;     struct_align  
+00000F70:             ; 
+00000F70:             ; ; Functions 
+00000F70:             ; ; Initialise Buffer 
+00000F70:             ; buffer_initialise
+00000F70:             ; ; This function intialises a buffer data structure 
+00000F70:             ; ; Inputs 
+00000F70:             ; ;   R0 buffer starting address 
+00000F70:             ; ;   R1 buffer size in words 
+00000F70:             ; ;   
+00000F70: E92D4010    ;     PUSH    {R4, LR}
+00000F74: E3A02000    ;     MOV     R2, #0
+00000F78: E2804014    ;     ADD     R4, R0, #buffer_data ; this calculates the start of buffer memory 
+00000F7C: E5804000    ;     STR     R4, [R0, #buffer_start] ; stores start of buffer in start of buffer offset 
+00000F80: E5804008    ;     STR     R4, [R0, #buffer_head]
+00000F84: E580400C    ;     STR     R4, [R0, #buffer_tail]
+00000F88: E5802010    ;     STR     R2, [R0, #buffer_waiter]
+00000F8C: E0804001    ;     ADD     R4, R0, R1  
+00000F90: E5804004    ;     STR     R4, [R0, #buffer_end]
+00000F94: E8BD8010    ;     POP     {R4, PC}
+00000F98:             ; 
+00000F98:             ; ; Place into buffer
+00000F98:             ; buffer_put 
+00000F98:             ; ; This function places a word into the buffer 
+00000F98:             ; ; Inputs 
+00000F98:             ; ;   R0 Address of where the buffer starts 
+00000F98:             ; ;   R1 Word to store 
+00000F98:             ; ; OutPuts 
+00000F98:             ; ;   R0 - Returns 0 when it is full 
+00000F98:             ; 
+00000F98: E92D40F0    ;     PUSH    {R4-R7, LR}
+00000F9C: E5904008    ;     LDR     R4, [R0, #buffer_head]
+00000FA0: E590500C    ;     LDR     R5, [R0, #buffer_tail] 
+00000FA4:             ; ;   Check if buffer is full 
+00000FA4:             ; ;       Check if head is 1 word infront of tail 
+00000FA4: E2856014    ;     ADD     R6, R5, #buffer_data
+00000FA8: E1560004    ;     CMP     R6, R4
+00000FAC: 0A00000A    ;     BEQ     buffer_full
+00000FB0:             ; ;       check if tail is at bottom of buffer and if so if tail is at base 
+00000FB0: E5906004    ;     LDR     R6, [R0, #buffer_end]
+00000FB4: E1560005    ;     CMP     R6, R5
+00000FB8: 05907000    ;     LDREQ   R7, [R0, #buffer_start]
+00000FBC: 01540007    ;     CMPEQ   R4, R7 
+00000FC0: 0A000005    ;     BEQ     buffer_full 
+00000FC4:             ; 
+00000FC4:             ; ;   place in buffer 
+00000FC4: E5051000    ;     STR     R1, [R5]
+00000FC8:             ;     ; if tail is at bottom of register move to top 
+00000FC8: E1560005    ;     CMP     R6, R5 
+00000FCC: 05905000    ;     LDREQ   R5, [R0, #buffer_start] ; 
+00000FD0:             ;     ; else add 4 
+00000FD0: 12855004    ;     ADDNE   R5, R5, #Word_Size
+00000FD4:             ;     ; and save new tail pointer address 
+00000FD4: E580500C    ;     STR     R5, [R0, #buffer_tail]
+00000FD8: E8BD80F0    ;     POP     {R4-R7, PC}
+00000FDC:             ; 
+00000FDC:             ; ;XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+00000FDC:             ; buffer_full
+00000FDC: E3A00000    ;     MOV     R0, #0 
+00000FE0: E8BD8070    ;     POP     {R4-R6, PC}
+00000FE4:             ; 
+00000FE4:             ; buffer_get 
+00000FE4:             ; ; This function retrieves a word from the buffer 
+00000FE4:             ; ; Inputs 
+00000FE4:             ; ;   R0 Address of where the buffer starts 
+00000FE4:             ; ; Outputs 
+00000FE4:             ; ;   R0 Word retrieved, 0 when empty
+00000FE4: E92D4070    ;     PUSH    {R4-R6, LR}
+00000FE8: E5904008    ;     LDR     R4, [R0, #buffer_head]
+00000FEC: E590500C    ;     LDR     R5, [R0, #buffer_tail]  
+00000FF0:             ; 
+00000FF0:             ;     ; Check if buffer is empty 
+00000FF0: E1540005    ;     CMP     R4, R5 
+00000FF4: 0A000008    ;     BEQ     buffer_empty 
+00000FF8:             ; 
+00000FF8:             ;     ; done here because loads can take time so reduces possible delay 
+00000FF8: E5906004    ;     LDR     R6, [R0, #buffer_end]
+00000FFC:             ;  ; if not retrieve word 
+00000FFC: E5141000    ;     LDR     R1, [R4]
 00001000:             ; 
-00001000:             ; ;   place in buffer 
-00001000: E5051000    ;     STR     R1, [R5]
-00001004:             ;     ; if tail is at bottom of register move to top 
-00001004: E1560005    ;     CMP     R6, R5 
-00001008: 05905000    ;     LDREQ   R5, [R0, #buffer_start] ; 
-0000100C:             ;     ; else add 4 
-0000100C: 12855004    ;     ADDNE   R5, R5, #Word_Size
-00001010:             ;     ; and save new tail pointer address 
-00001010: E580500C    ;     STR     R5, [R0, #buffer_tail]
-00001014: E8BD80F0    ;     POP     {R4-R7, PC}
-00001018:             ; 
-00001018:             ; ;XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-00001018:             ; buffer_full
-00001018: E3A00000    ;     MOV     R0, #0 
-0000101C: E8BD8070    ;     POP     {R4-R6, PC}
-00001020:             ; 
-00001020:             ; buffer_get 
-00001020:             ; ; This function retrieves a word from the buffer 
-00001020:             ; ; Inputs 
-00001020:             ; ;   R0 Address of where the buffer starts 
-00001020:             ; ; Outputs 
-00001020:             ; ;   R0 Word retrieved, 0 when empty
-00001020: E92D4070    ;     PUSH    {R4-R6, LR}
-00001024: E5904008    ;     LDR     R4, [R0, #buffer_head]
-00001028: E590500C    ;     LDR     R5, [R0, #buffer_tail]  
-0000102C:             ; 
-0000102C:             ;     ; Check if buffer is empty 
-0000102C: E1540005    ;     CMP     R4, R5 
-00001030: 0A000008    ;     BEQ     buffer_empty 
-00001034:             ; 
-00001034:             ;     ; done here because loads can take time so reduces possible delay 
-00001034: E5906004    ;     LDR     R6, [R0, #buffer_end]
-00001038:             ;  ; if not retrieve word 
-00001038: E5141000    ;     LDR     R1, [R4]
-0000103C:             ; 
-0000103C:             ;     ; check if head is at bottom of buffer 
-0000103C: E5906004    ;     LDR     R6, [R0, #buffer_end]
-00001040: E1540006    ;     CMP     R4, R6 
-00001044:             ;     ; if at bottom load buffer start address into register holding buffer head pointer 
-00001044: 05904000    ;     LDREQ   R4, [R0, #buffer_start]
-00001048: 12844004    ;     ADDNE   R4, R4, #&4
-0000104C: E5804008    ;     STR     R4, [R0, #buffer_head]
-00001050: E1A00001    ;     MOV     R0, R1
-00001054: E8BD8070    ;     POP     {R4-R6, PC}
-00001058:             ; 
-00001058:             ; 
-00001058:             ; ; XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-00001058:             ; buffer_empty 
-00001058: E3A00000    ;     MOV     R0, #0 
-0000105C: E8BD8070    ;     POP     {R4-R6, PC}
-00001060:             ; 
-00001060:             ; GET data_structures/process.s
-00001060:             ; ; Data Structure called processes 
-00001060:             ; struct 
-00001060:             ; pointer_next           word 
-00001060:             ; process_id             word 
-00001060:             ; process_constructor    word
-00001060: 00000000    ; DEFW 0
-00001064: 00000000    ; DEFW 0
-00001068: 00000000    ; DEFW 0
-0000106C: 00000000    ; DEFW 0
-00001070: 00000000    ; DEFW 0
-00001074: 00000000    ; DEFW 0
-00001078: 00000000    ; DEFW 0
-0000107C: 00000000    ; DEFW 0
-00001080: 00000000    ; DEFW 0
-00001084: 00000000    ; DEFW 0
-00001088: 00000000    ; DEFW 0
-0000108C: 00000000    ; DEFW 0
-00001090: 00000000    ; DEFW 0
-00001094:             ; 
-00001094:             ; context_switch_pointer  word
-00001094: 00000000    ; DEFW 0
-00001098: 00000000    ; DEFW 0
-0000109C: 00000000    ; DEFW 0
-000010A0: 00000000    ; DEFW 0
-000010A4: 00000000    ; DEFW 0
-000010A8: 00000000    ; DEFW 0
-000010AC: 00000000    ; DEFW 0
-000010B0: 00000000    ; DEFW 0
-000010B4: 00000000    ; DEFW 0
-000010B8: 00000000    ; DEFW 0
-000010BC: 00000000    ; DEFW 0
-000010C0: 00000000    ; DEFW 0
-000010C4: 00000000    ; DEFW 0
-000010C8:             ; 
-000010C8:             ;     struct_align
-000010C8:             ; Align 
-000010C8:             ; 
-000010C8:             ; GET data_structures/linked_list.s
-000010C8:             ; ; Linked List data Structure 
-000010C8:             ; 
-000010C8:             ; struct 
-000010C8:             ; pointer_next    word 
-000010C8:             ; data            word  
-000010C8:             ;     struct_align
-000010C8:             ; 
-000010C8:             ; ; Functions 
-000010C8:             ; ; Add Item to list 
-000010C8:             ; linked_list_add
-000010C8:             ; ; Function for adding an item to the list
-000010C8:             ; ; Inputs 
-000010C8:             ; ;   R0 Address of start of list     
-000010C8: E92D4010    ;     PUSH    {R4, LR} 
-000010CC: E5904000    ;     LDR     R4, [R0, #pointer_next]
-000010D0: E3540000    ;     CMP     R4, #0 
-000010D4: 05801000    ;     STREQ   R1, [R0, #pointer_next]
-000010D8: 0A000004    ;     BEQ     linked_list_add_end
-000010DC:             ; linked_list_add_loop
-000010DC: E5904000    ;     LDR     R4, [R0, #pointer_next]
-000010E0:             ;     ; See if its null 
-000010E0: E3540000    ;     CMP     R4, #&0 
-000010E4: 11A00004    ;     MOVNE   R0, R4 
-000010E8: 1AFFFFFB    ;     BNE     linked_list_add_loop
-000010EC: E5841000    ;     STR     R1, [R4, #pointer_next]
-000010F0:             ; linked_list_add_end
-000010F0: E8BD8010    ;     POP     {R4, PC}
-000010F4:             ; 
-000010F4:             ; linked_list_get 
-000010F4:             ; ; Inputs
-000010F4:             ; ;   R0 pointer to linked list starting location   
-000010F4:             ; ; Outputs 
-000010F4:             ; ;   R1 pointer to first item ob list
-000010F4: E92D4010    ;     PUSH    {R4, LR}    
-000010F8: E5101000    ;     LDR     R1, [R0]
-000010FC: E3510000    ;     CMP     R1, #&0 
-00001100: 15914000    ;     LDRNE   R4, [R1, #pointer_next]
-00001104: 15004000    ;     STRNE   R4, [R0]
-00001108: 11A01004    ;     MOVNE   R1, R4
-0000110C: E8BD8010    ;     POP     {R4, PC}
-00001110:             ; 
-00001110:             ; ; Remove Item to List 
-00001110:             ; linked_list_remove 
-00001110:             ; ; Input 
-00001110:             ; ;   R1 value of data for item removed    
-00001110:             ; ; Output 
-00001110:             ; ;   R0 if 0 then it failed 
-00001110: E92D4010    ;     PUSH    {R4, LR}
-00001114: EB000006    ;     BL      linked_list_find 
-00001118:             ;     ; check if item was found 
-00001118: E3500000    ;     CMP R0, #0 
-0000111C: 0A000003    ;     BEQ linked_list_remove_failed
-00001120:             ;     ; update pointer #
-00001120: E5904000    ;     LDR     R4, [R0, #pointer_next]
-00001124: E5814000    ;     STR     R4, [R1, #pointer_next]
-00001128:             ;     
-00001128:             ;     ; Blanks pointer next of desired item 
-00001128: E3A04000    ;     MOV     R4, #0 
-0000112C: E5804000    ;     STR     R4, [R0, #pointer_next]
-00001130:             ; linked_list_remove_failed
-00001130: E8BD8010    ;     POP     {R4, PC}
-00001134:             ; 
-00001134:             ; 
-00001134:             ; linked_list_find 
-00001134:             ; ; Function find item by data 
-00001134:             ; ; Input
-00001134:             ; ; R0 Pointer to start of linked list  
-00001134:             ; ; R1 Data of item function is looking for 
-00001134:             ; ; Ouput
-00001134:             ; ; R0 pointer to desired item 
-00001134:             ; ; R1 Pointer to preseding Item 
-00001134: E1A04000    ;     MOV     R4, R0
-00001138: E1A05000    ;     MOV     R5, R0
-0000113C:             ; linked_list_find_loop       
-0000113C:             ;     ; List is empty 
-0000113C: E5946000    ;     LDR     R6, [R4, #pointer_next]
-00001140: E3560000    ;     CMP     R6, #0 ; check if you reached end of line 
-00001144: 0A000009    ;     BEQ     linked_list_find_end_of_list
-00001148: E5947004    ;     LDR     R7, [R4, #data]
-0000114C: E1570001    ;     CMP     R7, R1
-00001150: 0A000003    ;     BEQ     linked_list_find_item_found
-00001154: E1A05004    ;     MOV     R5, R4
-00001158: E1A04006    ;     MOV     R4, R6
-0000115C:             ;     ; check if item is desired item  
-0000115C: EAFFFFF6    ;     B       linked_list_find_loop   
-00001160: E8BD81F0    ;     POP     {R4-R8, PC}   
+00001000:             ;     ; check if head is at bottom of buffer 
+00001000: E5906004    ;     LDR     R6, [R0, #buffer_end]
+00001004: E1540006    ;     CMP     R4, R6 
+00001008:             ;     ; if at bottom load buffer start address into register holding buffer head pointer 
+00001008: 05904000    ;     LDREQ   R4, [R0, #buffer_start]
+0000100C: 12844004    ;     ADDNE   R4, R4, #&4
+00001010: E5804008    ;     STR     R4, [R0, #buffer_head]
+00001014: E1A00001    ;     MOV     R0, R1
+00001018: E8BD8070    ;     POP     {R4-R6, PC}
+0000101C:             ; 
+0000101C:             ; 
+0000101C:             ; ; XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+0000101C:             ; buffer_empty 
+0000101C: E3A00000    ;     MOV     R0, #0 
+00001020: E8BD8070    ;     POP     {R4-R6, PC}
+00001024:             ; 
+00001024:             ; GET data_structures/process.s
+00001024:             ; ; Data Structure called processes 
+00001024:             ; struct 
+00001024:             ; pointer_next           word 
+00001024:             ; process_id             word 
+00001024:             ; process_constructor    word
+00001024:             ; word 
+00001024:             ; word 
+00001024:             ; word
+00001024:             ; word
+00001024:             ; word
+00001024:             ; word
+00001024:             ; word 
+00001024:             ; word 
+00001024:             ; word
+00001024:             ; word
+00001024:             ; word
+00001024:             ; word
+00001024:             ; word
+00001024:             ; word
+00001024:             ; context_switch_pointer  word
+00001024:             ; word 
+00001024:             ; word 
+00001024:             ; word
+00001024:             ; word
+00001024:             ; word
+00001024:             ; word
+00001024:             ; 
+00001024:             ;     struct_align
+00001024:             ; Align 
+00001024:             ; 
+00001024:             ; GET data_structures/linked_list.s
+00001024:             ; ; Linked List data Structure 
+00001024:             ; 
+00001024:             ; struct 
+00001024:             ; pointer_next    word 
+00001024:             ; data            word  
+00001024:             ;     struct_align
+00001024:             ; 
+00001024:             ; ; Functions 
+00001024:             ; ; Add Item to list 
+00001024:             ; linked_list_add
+00001024:             ; ; Function for adding an item to the list
+00001024:             ; ; Inputs 
+00001024:             ; ;   R0 Address of start of list     
+00001024: E92D4010    ;     PUSH    {R4, LR} 
+00001028: E5904000    ;     LDR     R4, [R0, #pointer_next]
+0000102C: E3540000    ;     CMP     R4, #0 
+00001030: 05801000    ;     STREQ   R1, [R0, #pointer_next]
+00001034: 0A000004    ;     BEQ     linked_list_add_end
+00001038:             ; linked_list_add_loop
+00001038: E5904000    ;     LDR     R4, [R0, #pointer_next]
+0000103C:             ;     ; See if its null 
+0000103C: E3540000    ;     CMP     R4, #&0 
+00001040: 11A00004    ;     MOVNE   R0, R4 
+00001044: 1AFFFFFB    ;     BNE     linked_list_add_loop
+00001048: E5841000    ;     STR     R1, [R4, #pointer_next]
+0000104C:             ; linked_list_add_end
+0000104C: E8BD8010    ;     POP     {R4, PC}
+00001050:             ; 
+00001050:             ; linked_list_get 
+00001050:             ; ; Inputs
+00001050:             ; ;   R0 pointer to linked list starting location   
+00001050:             ; ; Outputs 
+00001050:             ; ;   R1 pointer to first item ob list
+00001050: E92D4010    ;     PUSH    {R4, LR}    
+00001054: E5101000    ;     LDR     R1, [R0]
+00001058: E3510000    ;     CMP     R1, #&0 
+0000105C: 15914000    ;     LDRNE   R4, [R1, #pointer_next]
+00001060: 15004000    ;     STRNE   R4, [R0]
+00001064: 11A01004    ;     MOVNE   R1, R4
+00001068: E8BD8010    ;     POP     {R4, PC}
+0000106C:             ; 
+0000106C:             ; ; Remove Item to List 
+0000106C:             ; linked_list_remove 
+0000106C:             ; ; Input 
+0000106C:             ; ;   R1 value of data for item removed    
+0000106C:             ; ; Output 
+0000106C:             ; ;   R0 if 0 then it failed 
+0000106C: E92D4010    ;     PUSH    {R4, LR}
+00001070: EB000006    ;     BL      linked_list_find 
+00001074:             ;     ; check if item was found 
+00001074: E3500000    ;     CMP R0, #0 
+00001078: 0A000003    ;     BEQ linked_list_remove_failed
+0000107C:             ;     ; update pointer #
+0000107C: E5904000    ;     LDR     R4, [R0, #pointer_next]
+00001080: E5814000    ;     STR     R4, [R1, #pointer_next]
+00001084:             ;     
+00001084:             ;     ; Blanks pointer next of desired item 
+00001084: E3A04000    ;     MOV     R4, #0 
+00001088: E5804000    ;     STR     R4, [R0, #pointer_next]
+0000108C:             ; linked_list_remove_failed
+0000108C: E8BD8010    ;     POP     {R4, PC}
+00001090:             ; 
+00001090:             ; 
+00001090:             ; linked_list_find 
+00001090:             ; ; Function find item by data 
+00001090:             ; ; Input
+00001090:             ; ; R0 Pointer to start of linked list  
+00001090:             ; ; R1 Data of item function is looking for 
+00001090:             ; ; Ouput
+00001090:             ; ; R0 pointer to desired item 
+00001090:             ; ; R1 Pointer to preseding Item 
+00001090: E1A04000    ;     MOV     R4, R0
+00001094: E1A05000    ;     MOV     R5, R0
+00001098:             ; linked_list_find_loop       
+00001098:             ;     ; List is empty 
+00001098: E5946000    ;     LDR     R6, [R4, #pointer_next]
+0000109C: E3560000    ;     CMP     R6, #0 ; check if you reached end of line 
+000010A0: 0A000009    ;     BEQ     linked_list_find_end_of_list
+000010A4: E5947004    ;     LDR     R7, [R4, #data]
+000010A8: E1570001    ;     CMP     R7, R1
+000010AC: 0A000003    ;     BEQ     linked_list_find_item_found
+000010B0: E1A05004    ;     MOV     R5, R4
+000010B4: E1A04006    ;     MOV     R4, R6
+000010B8:             ;     ; check if item is desired item  
+000010B8: EAFFFFF6    ;     B       linked_list_find_loop   
+000010BC: E8BD81F0    ;     POP     {R4-R8, PC}   
+000010C0:             ; 
+000010C0:             ; linked_list_find_item_found
+000010C0: E1A00004    ;     MOV     R0, R4
+000010C4: E1A01005    ;     MOV     R1, R5
+000010C8: E8BD81F0    ;     POP     {R4-R8, PC} 
+000010CC:             ; 
+000010CC:             ; linked_list_find_end_of_list
+000010CC: E3A00000    ;     MOV R0, #0 
+000010D0: E8BD81F0    ;     POP     {R4-R8, PC} 
+000010D4:             ; 
+000010D4:             ; GET process_list.s
+000010D4:             ; ; List of all Processes
+000010D4:             ; Idle 
+000010D4: 00000000    ;     DEFW 0 ; pointer next
+000010D8: 00000000    ;     DEFW 0  ; process Id 
+000010DC: 00001728    ;     DEFW Idle_Constructor
+000010E0: 00000000    ;     DEFW 0 ; process Stack pointer 
+000010E4:             ;     DEFS &80 
+00001164:             ;     Align
 00001164:             ; 
-00001164:             ; linked_list_find_item_found
-00001164: E1A00004    ;     MOV     R0, R4
-00001168: E1A01005    ;     MOV     R1, R5
-0000116C: E8BD81F0    ;     POP     {R4-R8, PC} 
-00001170:             ; 
-00001170:             ; linked_list_find_end_of_list
-00001170: E3A00000    ;     MOV R0, #0 
-00001174: E8BD81F0    ;     POP     {R4-R8, PC} 
-00001178:             ; 
-00001178:             ; GET process_list.s
-00001178:             ; ; List of all Processes
-00001178:             ; Idle 
-00001178: 00000000    ;     DEFW 0 ; pointer next
-0000117C: 00000000    ;     DEFW 0  ; process Id 
-00001180: 000017CC    ;     DEFW Idle_Constructor
-00001184: 00000000    ;     DEFW 0 ; process Stack pointer 
-00001188:             ;     DEFS &80 
-00001208:             ;     Align
-00001208:             ; 
-00001208:             ; Terminal_Handler_Process
-00001208: 00000000    ;     DEFW 0 
-0000120C: 00000001    ;     DEFW 1
-00001210: 00001464    ;     DEFW Terminal_Handler_Constructor
-00001214: 00000000    ;     DEFW 0 
-00001218:             ;     DEFS &C8 
-000012E0:             ;     Align
-000012E0:             ; 
-000012E0:             ; Lights_Handler_Process 
-000012E0: 00000000    ;     DEFW 0 
-000012E4: 00000002    ;     DEFW 2
-000012E8: 0000144C    ;     DEFW Lights_Handler_Constructor 
-000012EC: 00000000    ;     DEFW 0 
-000012F0:             ;     DEFS &80 
-00001370:             ;     Align
-00001370:             ; 
-00001370:             ; HelloWorld_Handler_Process 
-00001370: 00000000    ;     DEFW 0 
-00001374: 00000003    ;     DEFW 3
-00001378: 00001504    ;     DEFW HelloWorld_Handler_Constructor 
-0000137C: 00000000    ;     DEFW 0 
-00001380:             ;     DEFS &80 
-00001400:             ;     Align
-00001400:             ; 
-00001400:             ; GET     malloc.s
-00001400:             ; ; this file contains the libary functions malloc and free 
-00001400:             ; 
-00001400:             ; ; This function is used by a user process to reserve memory 
-00001400:             ; ; Inputs 
-00001400:             ; ;   R0 - pointer to list of free memory 
-00001400:             ; ;   R1 - Amount of memeory requested in words 
-00001400:             ; malloc 
-00001400: E92D41F0    ;     PUSH    {R4-R8,LR} 
-00001404:             ;     ; Check if a list of free memeory was provided 
-00001404: E3A04000    ;     MOV R4, #0 
-00001408: E1500004    ;     CMP R0, R4 
-0000140C:             ;     ;BEQ 
-0000140C:             ; 
-0000140C: E8BD81F0    ;     POP     {R4-R8, PC}
-00001410:             ; 
-00001410:             ; 
-00001410:             ; GET     printString.s
-00001410:             ; ;this file contains the print string function 
-00001410:             ; ; it take the following inputs 
-00001410:             ; ; R1 is the string to be printed 
-00001410:             ; ; and returns the following outputs 
-00001410:             ; 
-00001410:             ; ; Working Registers 
-00001410:             ; ; R4 is the pointer to the character to be printed 
-00001410:             ; 
-00001410:             ; 
-00001410:             ; printString 
-00001410: E92D4010    ;     PUSH    {R4, LR}
-00001414: E1A04001    ;     MOV     R4, R1
-00001418:             ; 
-00001418:             ; printStringLoop 
-00001418: E5540000    ;     LDRB    R0, [R4]   ; Get next character to be printed
-0000141C: E2844001    ;     ADD     R4, R4, #1 
-00001420: E3500000    ;     CMP     R0, #0 
-00001424: 0A000006    ;     BEQ     print_String_Complete     ; Return to printString Call and restores Registers to be
+00001164:             ; Terminal_Handler_Process
+00001164: 00000000    ;     DEFW 0 
+00001168: 00000001    ;     DEFW 1
+0000116C: 000013C0    ;     DEFW Terminal_Handler_Constructor
+00001170: 00000000    ;     DEFW 0 
+00001174:             ;     DEFS &C8 
+0000123C:             ;     Align
+0000123C:             ; 
+0000123C:             ; Lights_Handler_Process 
+0000123C: 00000000    ;     DEFW 0 
+00001240: 00000002    ;     DEFW 2
+00001244: 000013A8    ;     DEFW Lights_Handler_Constructor 
+00001248: 00000000    ;     DEFW 0 
+0000124C:             ;     DEFS &80 
+000012CC:             ;     Align
+000012CC:             ; 
+000012CC:             ; HelloWorld_Handler_Process 
+000012CC: 00000000    ;     DEFW 0 
+000012D0: 00000003    ;     DEFW 3
+000012D4: 00001460    ;     DEFW HelloWorld_Handler_Constructor 
+000012D8: 00000000    ;     DEFW 0 
+000012DC:             ;     DEFS &80 
+0000135C:             ;     Align
+0000135C:             ; 
+0000135C:             ; GET     malloc.s
+0000135C:             ; ; this file contains the libary functions malloc and free 
+0000135C:             ; 
+0000135C:             ; ; This function is used by a user process to reserve memory 
+0000135C:             ; ; Inputs 
+0000135C:             ; ;   R0 - pointer to list of free memory 
+0000135C:             ; ;   R1 - Amount of memeory requested in words 
+0000135C:             ; malloc 
+0000135C: E92D41F0    ;     PUSH    {R4-R8,LR} 
+00001360:             ;     ; Check if a list of free memeory was provided 
+00001360: E3A04000    ;     MOV R4, #0 
+00001364: E1500004    ;     CMP R0, R4 
+00001368:             ;     ;BEQ 
+00001368:             ; 
+00001368: E8BD81F0    ;     POP     {R4-R8, PC}
+0000136C:             ; 
+0000136C:             ; 
+0000136C:             ; GET     printString.s
+0000136C:             ; ;this file contains the print string function 
+0000136C:             ; ; it take the following inputs 
+0000136C:             ; ; R1 is the string to be printed 
+0000136C:             ; ; and returns the following outputs 
+0000136C:             ; 
+0000136C:             ; ; Working Registers 
+0000136C:             ; ; R4 is the pointer to the character to be printed 
+0000136C:             ; 
+0000136C:             ; 
+0000136C:             ; printString 
+0000136C: E92D4010    ;     PUSH    {R4, LR}
+00001370: E1A04001    ;     MOV     R4, R1
+00001374:             ; 
+00001374:             ; printStringLoop 
+00001374: E5540000    ;     LDRB    R0, [R4]   ; Get next character to be printed
+00001378: E2844001    ;     ADD     R4, R4, #1 
+0000137C: E3500000    ;     CMP     R0, #0 
+00001380: 0A000006    ;     BEQ     print_String_Complete     ; Return to printString Call and restores Registers to be
                       ; fore call
-00001428:             ; printCharLoop
-00001428: EF000000    ;     SVC     Print_String_SVC        ; needs to be implemented 
-0000142C: E3510000    ;     CMP     R1, #0          ; loops incase LCD is not ready 
-00001430: 1AFFFFFC    ;     BNE     printCharLoop  
-00001434: E3520000    ;     CMP     R2, #0          ; occurs when a print was unsucessful, perhase due to ownership iss
+00001384:             ; printCharLoop
+00001384: EF000000    ;     SVC     Print_String_SVC        ; needs to be implemented 
+00001388: E3510000    ;     CMP     R1, #0          ; loops incase LCD is not ready 
+0000138C: 1AFFFFFC    ;     BNE     printCharLoop  
+00001390: E3520000    ;     CMP     R2, #0          ; occurs when a print was unsucessful, perhase due to ownership iss
                       ; ues
-00001438: 1A000000    ;     BNE     printFailed
-0000143C: EAFFFFF5    ;     B       printStringLoop
+00001394: 1A000000    ;     BNE     printFailed
+00001398: EAFFFFF5    ;     B       printStringLoop
+0000139C:             ; 
+0000139C:             ; printFailed
+0000139C: EAFFFFFE    ;     B printFailed
+000013A0:             ; 
+000013A0:             ; print_String_Complete
+000013A0: EF000004    ;     SVC     Release_LCD_SVC
+000013A4: E8BD8010    ;     POP     {R4, PC}
+000013A8:             ; 
+000013A8:             ; ; print char svc will check if the LCD is ready and if so print otherwise it will return 
+000013A8:             ; 
+000013A8:             ; Get user/user_main.s
+000013A8:             ; ; File to make it easy to load all user files 
+000013A8:             ; GET     Lights.s 
+000013A8:             ; ; This file is for using the LEDS 
+000013A8:             ; Lights_Handler_Constructor
+000013A8:             ; ; set up stack 
+000013A8: E28FD0DA    ; ADRL    SP, Lights_Stack_End
+000013AC: E28DDC02    ; 
+000013B0:             ; 
+000013B0:             ; ; set and LED 
+000013B0:             ; 
+000013B0: E3A000D0    ;     MOV     R0, #0b1101_0000 
+000013B4: E3A01022    ;     MOV     R1, #0b0010_0010
+000013B8: EF000008    ;     SVC     LED_SVC
+000013BC:             ; 
+000013BC: EAFFFFFE    ; lights_loop B lights_loop
+000013C0:             ; 
+000013C0:             ; ; loop in place 
+000013C0:             ; ; Terminal Handler 
+000013C0:             ; GET Terminal_Handler.s
+000013C0:             ; ; Terminal Handler Process 
+000013C0:             ; ; This process handles intake from the terminal and determines how to respond
+000013C0:             ; 
+000013C0:             ; ;   Register Index 
+000013C0:             ;     ; R9  Holds last input character 
+000013C0:             ;     ; R10 is used to tell the process if it an echo input or not 1 is echo 0 is not echo 
+000013C0:             ;     ; R11 is used to store address of RxD buffer start  
+000013C0:             ;     ; R12 is used to store address of buffer start 
+000013C0:             ; 
+000013C0:             ; 
+000013C0:             ; Terminal_Handler_Constructor
+000013C0:             ; ; Constructor 
+000013C0:             ;  ; Set up Stack pointer 
+000013C0: E28FDFAB    ;     ADRL    SP, Terminal_Handler_Stack_End
+000013C4:             ; 
+000013C4:             ;  ; Set up Buffer to store input from buffer 
+000013C4: E28FCFB6    ;     ADRL    R12, StandardIn_start
+000013C8:             ;  ; Saves memeory address to process register 
+000013C8: E1A0000C    ;     MOV     R0, R12
+000013CC: E3A01064    ;     MOV     R1, #StandardIn_Buffer_Size
+000013D0: EBFFFEE6    ;     BL      buffer_initialise
+000013D4:             ; 
+000013D4:             ; ;
+000013D4:             ; ; Main 
+000013D4:             ;  ; Set up Constants 
+000013D4: E24FBF93    ;   ADRL    R11, Serial_RxD_Buffer_Address 
+000013D8: E24BBA01    ; 
+000013DC: E51BB000    ;   LDR     R11, [R11]
+000013E0: E3A0A001    ;   MOV     R10, #1   ; Boolean for echo 
+000013E4:             ;     ;MOV     R10, #Terminal_Control
+000013E4:             ;     ;MOV     R9, #Terminal_Data
+000013E4:             ; 
+000013E4:             ;  ;
+000013E4:             ;  ; Second it needs to handler what happens when it is called 
+000013E4:             ; Terminal_Handler_Main_Loop
+000013E4:             ;   ; Requests control of RxD and TxD 
+000013E4:             ;   ; XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+000013E4:             ;   ; 
+000013E4:             ;   ; Check if there is anything in the RxD Buffer 
+000013E4: E1A0000B    ;     MOV     R0, R11 
+000013E8: EBFFFEFD    ;     BL      buffer_get
+000013EC: E3500000    ;     CMP     R0, #&0
+000013F0: 0AFFFFFB    ;     BEQ     Terminal_Handler_Main_Loop
+000013F4:             ;     
+000013F4:             ;     ; Check if the input is an Enter
+000013F4: E350000A    ;     CMP     R0, #&A
+000013F8: 0A000006    ;     BEQ     Terminal_Handler_Commands
+000013FC: 11A09000    ;     MOVNE   R9, R0
+00001400:             ; 
+00001400:             ;   ; Check if in protected mode 
+00001400: E35A0001    ;     CMP     R10, #1
+00001404: 0B000001    ;     BLEQ     Transmit 
+00001408:             ;   ;
+00001408:             ; 
+00001408:             ;     ;   if it is an enter check if it is a known command 
+00001408:             ;         ; Checks if it has recieved a input from the serie line 
+00001408:             ; 
+00001408:             ;     ; Checks to see what the input is and if it shoudl do anyting 
+00001408:             ;     ;   if it is enter it checks what it needs to do 
+00001408:             ;     ; Places input into StandardIn Buffer 
+00001408:             ;     ; Checks to see if it is in echo to terminal mode or not 
+00001408:             ;     ;   If it is it send it to TxD Buffer 
+00001408: E1A09000    ;     MOV   R9, R0
+0000140C: EAFFFFF4    ;   B Terminal_Handler_Main_Loop
+00001410:             ; Transmit 
+00001410:             ; ;B     Terminal_Handler_Main_Loop
+00001410:             ; ; This function is responsible for transmitting 
+00001410: EF00000C    ;   SVC   Transmit_SVC
+00001414: EAFFFFF2    ;   B     Terminal_Handler_Main_Loop
+00001418:             ; Terminal_Handler_Commands
+00001418:             ;     ; This function will check input against commands 
+00001418: E3590031    ;     CMP   R9, #&31 
+0000141C: 0A000003    ;     BEQ   printHello
+00001420:             ;     
+00001420: E3590032    ;     CMP   R9, #&32
+00001424: 0A000005    ;     BEQ   LED_Show
+00001428:             ; 
+00001428: E3A09000    ;     MOV   R9, #0 
+0000142C: EAFFFFEC    ;     B     Terminal_Handler_Main_Loop
+00001430:             ; 
+00001430:             ; printHello  
+00001430: E24F0F5B    ;     ADRL  R0, HelloWorld_Handler_Process 
+00001434: EF000010    ;     SVC   Start_Process_SVC
+00001438: E3A09000    ;     MOV   R9, #0 
+0000143C: EAFFFFF5    ;     B     Terminal_Handler_Commands
 00001440:             ; 
-00001440:             ; printFailed
-00001440: EAFFFFFE    ;     B printFailed
-00001444:             ; 
-00001444:             ; print_String_Complete
-00001444: EF000004    ;     SVC     Release_LCD_SVC
-00001448: E8BD8010    ;     POP     {R4, PC}
-0000144C:             ; 
-0000144C:             ; ; print char svc will check if the LCD is ready and if so print otherwise it will return 
-0000144C:             ; 
-0000144C:             ; Get user/user_main.s
-0000144C:             ; ; File to make it easy to load all user files 
-0000144C:             ; GET     Lights.s 
-0000144C:             ; ; This file is for using the LEDS 
-0000144C:             ; Lights_Handler_Constructor
-0000144C:             ; ; set up stack 
-0000144C: E28FD0DA    ; ADRL    SP, Lights_Stack_End
-00001450: E28DDC02    ; 
-00001454:             ; 
-00001454:             ; ; set and LED 
-00001454:             ; 
-00001454: E3A000D0    ;     MOV     R0, #0b1101_0000 
-00001458: E3A01022    ;     MOV     R1, #0b0010_0010
-0000145C: EF000008    ;     SVC     LED_SVC
+00001440:             ; LED_Show    
+00001440: E24F0F83    ;     ADRL  R0, Lights_Handler_Process
+00001444: EF000010    ;     SVC   Start_Process_SVC
+00001448: E3A09000    ;     MOV   R9, #0 
+0000144C: EAFFFFF1    ;     B     Terminal_Handler_Commands
+00001450:             ; 
+00001450:             ; 
+00001450:             ; 
+00001450:             ; 
+00001450:             ; GET     HelloWorld.s
+00001450:             ; ; This file is used to print the hello world statement to the LCD 
+00001450:             ; 
+00001450: 48 65 31 32 ; string      DEFB  'He12o Wor3d!',0
+00001454: 6F 20 57 6F ; 
+00001458: 72 33 64 21 ; 
+0000145C: 00          ; 
+00001460:             ;             align
 00001460:             ; 
-00001460: EAFFFFFE    ; lights_loop B lights_loop
-00001464:             ; 
-00001464:             ; ; loop in place 
-00001464:             ; ; Terminal Handler 
-00001464:             ; GET Terminal_Handler.s
-00001464:             ; ; Terminal Handler Process 
-00001464:             ; ; This process handles intake from the terminal and determines how to respond
-00001464:             ; 
-00001464:             ; ;   Register Index 
-00001464:             ;     ; R9  Holds last input character 
-00001464:             ;     ; R10 is used to tell the process if it an echo input or not 1 is echo 0 is not echo 
-00001464:             ;     ; R11 is used to store address of RxD buffer start  
-00001464:             ;     ; R12 is used to store address of buffer start 
-00001464:             ; 
-00001464:             ; 
-00001464:             ; Terminal_Handler_Constructor
-00001464:             ; ; Constructor 
-00001464:             ;  ; Set up Stack pointer 
-00001464: E28FDFAB    ;     ADRL    SP, Terminal_Handler_Stack_End
+00001460:             ; 
+00001460:             ; HelloWorld_Handler_Constructor
+00001460:             ; ; set up stack 
+00001460: E28FD03A    ; ADRL    SP, HelloWorld_Stack_End
+00001464: E28DDC02    ; 
 00001468:             ; 
-00001468:             ;  ; Set up Buffer to store input from buffer 
-00001468: E28FCFB6    ;     ADRL    R12, StandardIn_start
-0000146C:             ;  ; Saves memeory address to process register 
-0000146C: E1A0000C    ;     MOV     R0, R12
-00001470: E3A01064    ;     MOV     R1, #StandardIn_Buffer_Size
-00001474: EBFFFECC    ;     BL      buffer_initialise
-00001478:             ; 
-00001478:             ; ;
-00001478:             ; ; Main 
-00001478:             ;  ; Set up Constants 
-00001478: E24FBFB9    ;   ADRL    R11, Serial_RxD_Buffer_Address 
-0000147C: E24BBA01    ; 
-00001480: E51BB000    ;   LDR     R11, [R11]
-00001484: E3A0A001    ;   MOV     R10, #1   ; Boolean for echo 
-00001488:             ;     ;MOV     R10, #Terminal_Control
-00001488:             ;     ;MOV     R9, #Terminal_Data
-00001488:             ; 
-00001488:             ;  ;
-00001488:             ;  ; Second it needs to handler what happens when it is called 
-00001488:             ; Terminal_Handler_Main_Loop
-00001488:             ;   ; Requests control of RxD and TxD 
-00001488:             ;   ; XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-00001488:             ;   ; 
-00001488:             ;   ; Check if there is anything in the RxD Buffer 
-00001488: E1A0000B    ;     MOV     R0, R11 
-0000148C: EBFFFEE3    ;     BL      buffer_get
-00001490: E3500000    ;     CMP     R0, #&0
-00001494: 0AFFFFFB    ;     BEQ     Terminal_Handler_Main_Loop
-00001498:             ;     
-00001498:             ;     ; Check if the input is an Enter
-00001498: E350000A    ;     CMP     R0, #&A
-0000149C: 0A000006    ;     BEQ     Terminal_Handler_Commands
-000014A0: 11A09000    ;     MOVNE   R9, R0
-000014A4:             ; 
-000014A4:             ;   ; Check if in protected mode 
-000014A4: E35A0001    ;     CMP     R10, #1
-000014A8: 0B000001    ;     BLEQ     Transmit 
-000014AC:             ;   ;
-000014AC:             ; 
-000014AC:             ;     ;   if it is an enter check if it is a known command 
-000014AC:             ;         ; Checks if it has recieved a input from the serie line 
-000014AC:             ; 
-000014AC:             ;     ; Checks to see what the input is and if it shoudl do anyting 
-000014AC:             ;     ;   if it is enter it checks what it needs to do 
-000014AC:             ;     ; Places input into StandardIn Buffer 
-000014AC:             ;     ; Checks to see if it is in echo to terminal mode or not 
-000014AC:             ;     ;   If it is it send it to TxD Buffer 
-000014AC: E1A09000    ;     MOV   R9, R0
-000014B0: EAFFFFF4    ;   B Terminal_Handler_Main_Loop
-000014B4:             ; Transmit 
-000014B4:             ; ;B     Terminal_Handler_Main_Loop
-000014B4:             ; ; This function is responsible for transmitting 
-000014B4: EF00000C    ;   SVC   Transmit_SVC
-000014B8: EAFFFFF2    ;   B     Terminal_Handler_Main_Loop
-000014BC:             ; Terminal_Handler_Commands
-000014BC:             ;     ; This function will check input against commands 
-000014BC: E3590031    ;     CMP   R9, #&31 
-000014C0: 0A000003    ;     BEQ   printHello
-000014C4:             ;     
-000014C4: E3590032    ;     CMP   R9, #&32
-000014C8: 0A000005    ;     BEQ   LED_Show
-000014CC:             ; 
-000014CC: E3A09000    ;     MOV   R9, #0 
-000014D0: EAFFFFEC    ;     B     Terminal_Handler_Main_Loop
-000014D4:             ; 
-000014D4:             ; printHello  
-000014D4: E24F0F5B    ;     ADRL  R0, HelloWorld_Handler_Process 
-000014D8: EF000010    ;     SVC   Start_Process_SVC
-000014DC: E3A09000    ;     MOV   R9, #0 
-000014E0: EAFFFFF5    ;     B     Terminal_Handler_Commands
-000014E4:             ; 
-000014E4:             ; LED_Show    
-000014E4: E24F0F83    ;     ADRL  R0, Lights_Handler_Process
-000014E8: EF000010    ;     SVC   Start_Process_SVC
-000014EC: E3A09000    ;     MOV   R9, #0 
-000014F0: EAFFFFF1    ;     B     Terminal_Handler_Commands
-000014F4:             ; 
-000014F4:             ; 
-000014F4:             ; 
-000014F4:             ; 
-000014F4:             ; GET     HelloWorld.s
-000014F4:             ; ; This file is used to print the hello world statement to the LCD 
-000014F4:             ; 
-000014F4: 48 65 31 32 ; string      DEFB  'He12o Wor3d!',0
-000014F8: 6F 20 57 6F ; 
-000014FC: 72 33 64 21 ; 
-00001500: 00          ; 
-00001504:             ;             align
-00001504:             ; 
-00001504:             ; 
-00001504:             ; HelloWorld_Handler_Constructor
-00001504:             ; ; set up stack 
-00001504: E28FD03A    ; ADRL    SP, HelloWorld_Stack_End
-00001508: E28DDC02    ; 
-0000150C:             ; 
-0000150C:             ; ; set and LCD 
-0000150C: E24F1020    ; ADRL    R1, string
-00001510: EBFFFFBE    ; BL      printString 
-00001514:             ; 
-00001514: EAFFFFFE    ; HelloWorld_Loop B HelloWorld_Loop
-00001518:             ; 
-00001518:             ; 
-00001518:             ; ; loop in place 
-00001518:             ; 
-00001518:             ; ; Temp permanent memeory for user processes 
-00001518:             ; GET user_memory.s
-00001518:             ; 
-00001518:             ; ; variable for different stacks 
-00001518:             ; Terminal_Handler_Stack_Size EQU &200
-00001518:             ; Lights_Stack_Size           EQu &16
-00001518:             ; HelloWorld_Stack_size       EQU &16
-00001518:             ; Idle_Stack_Size EQU &20
-00001518:             ;     Align 
-00001518:             ; StandardIn_Buffer_Size      EQU &64
-00001518:             ;     Align
-00001518:             ;         ; Terminal Handler Stack 
-00001518:             ;         
-00001518:             ;         Terminal_Handler_Stack_Start   DEFS Terminal_Handler_Stack_Size ; Terminal_Handler Stac
+00001468:             ; ; set and LCD 
+00001468: E24F1020    ; ADRL    R1, string
+0000146C: EBFFFFBE    ; BL      printString 
+00001470:             ; 
+00001470: EAFFFFFE    ; HelloWorld_Loop B HelloWorld_Loop
+00001474:             ; 
+00001474:             ; 
+00001474:             ; ; loop in place 
+00001474:             ; 
+00001474:             ; ; Temp permanent memeory for user processes 
+00001474:             ; GET user_memory.s
+00001474:             ; 
+00001474:             ; ; variable for different stacks 
+00001474:             ; Terminal_Handler_Stack_Size EQU &200
+00001474:             ; Lights_Stack_Size           EQu &16
+00001474:             ; HelloWorld_Stack_size       EQU &16
+00001474:             ; Idle_Stack_Size EQU &20
+00001474:             ;     Align 
+00001474:             ; StandardIn_Buffer_Size      EQU &64
+00001474:             ;     Align
+00001474:             ;         ; Terminal Handler Stack 
+00001474:             ;         
+00001474:             ;         Terminal_Handler_Stack_Start   DEFS Terminal_Handler_Stack_Size ; Terminal_Handler Stac
                       ; k
-00001718:             ;         Terminal_Handler_Stack_End
-00001718:             ;              Align
-00001718:             ; 
-00001718:             ;         Lights_Stack_Start              DEFS Lights_Stack_Size
-0000172E:             ;         Lights_Stack_End
-00001730:             ;             Align
+00001674:             ;         Terminal_Handler_Stack_End
+00001674:             ;              Align
+00001674:             ; 
+00001674:             ;         Lights_Stack_Start              DEFS Lights_Stack_Size
+0000168A:             ;         Lights_Stack_End
+0000168C:             ;             Align
+0000168C:             ; 
+0000168C:             ;         HelloWorld_Stack_Start          DEFS HelloWorld_Stack_size
+000016A2:             ;         HelloWorld_Stack_End
+000016A4:             ;             Align
+000016A4:             ; 
+000016A4:             ;         StandardIn_start DEFS StandardIn_Buffer_Size
+00001708:             ;         StandardIn_End 
+00001708:             ;             Align 
+00001708:             ; 
+00001708:             ;         Idle_Stack_Start   DEFS Idle_Stack_Size 
+00001728:             ;         Idle_Stack_End
+00001728:             ;              Align
+00001728:             ; 
+00001728:             ; GET Idle.s
+00001728:             ; ; this file is the idle file
+00001728:             ; 
+00001728:             ; Idle_Constructor
+00001728: E24FD008    ;     ADRL    SP, Idle_Stack_End
+0000172C: EAFFFFFE    ; Idle_Loop B Idle_Loop
 00001730:             ; 
-00001730:             ;         HelloWorld_Stack_Start          DEFS HelloWorld_Stack_size
-00001746:             ;         HelloWorld_Stack_End
-00001748:             ;             Align
-00001748:             ; 
-00001748:             ;         StandardIn_start DEFS StandardIn_Buffer_Size
-000017AC:             ;         StandardIn_End 
-000017AC:             ;             Align 
-000017AC:             ; 
-000017AC:             ;         Idle_Stack_Start   DEFS Idle_Stack_Size 
-000017CC:             ;         Idle_Stack_End
-000017CC:             ;              Align
-000017CC:             ; 
-000017CC:             ; GET Idle.s
-000017CC:             ; ; this file is the idle file
-000017CC:             ; 
-000017CC:             ; Idle_Constructor
-000017CC: E24FD008    ;     ADRL    SP, Idle_Stack_End
-000017D0: EAFFFFFE    ; Idle_Loop B Idle_Loop
-000017D4:             ; 
-000017D4:             ; 
-000017D4:             ; GET     RAM_Space.s
-000017D4:             ; ; This fule holds the RAM Space.
-000017D4:             ; RAM_Size        EQU &2000  
-000017D4:             ; DEFS            RAM_Size
+00001730:             ; 
+00001730:             ; GET     RAM_Space.s
+00001730:             ; ; This fule holds the RAM Space.
+00001730:             ; RAM_Size        EQU &2000  
+00001730:             ; DEFS            RAM_Size
 
 Symbol Table: Labels
 : Undefined_Instruction             00000004  Local -- ARM
@@ -1379,63 +1364,63 @@ Symbol Table: Labels
 : Interrupt_Alert_Offset            00000018  Value
 : Interrupt_Timer_Offset            0000000C  Value
 : Interrupt_Time_Interval           00000064  Value
-: Serial_RxD_Buffer_Address         0000019C  Local -- ARM
-: Serial_TxD_Buffer_Address         000001B4  Local -- ARM
-: current_process                   000001B8  Local -- ARM
-: sheduler_ready_list_start         000001BC  Local -- ARM
-: Supervisor_Stack_Size             00000256  Value
-: Interrupt_Stack_Size              00000256  Value
-: Supervisor_Stack_Start            000001C0  Local -- ARM
-: Supervisor_Stack_End              00000416  Local -- ARM
-: Interrupt_Stack_Start             00000418  Local -- ARM
-: Interrupt_Stack_End               0000066E  Local -- ARM
-: Serial_RxD_Buffer_Size            00000256  Value
-: Serial_TxD_Buffer_Size            00000256  Value
-: Serial_RxD_Buffer_Start           00000670  Local -- ARM
-: Serial_RxD_Buffer_End             000008C6  Local -- ARM
-: Serial_TxD_Buffer_Start           000008C8  Local -- ARM
-: Serial_TxD_Buffer_End             00000B1E  Local -- ARM
-: Interrupt_Set                     00000B20  Local -- ARM
-: Interrupt_Off                     00000B34  Local -- ARM
-: Transmit_word                     00000B48  Local -- ARM
-: Transmit_word_send                00000B84  Local -- ARM
-: Context_Switch                    00000B90  Local -- ARM
-: Context_Switch_Store_Return       00000B94  Local -- ARM
-: Context_Store                     00000BC8  Local -- ARM
-: Context_Load                      00000BF0  Local -- ARM
-: memory_request                    00000C10  Local -- ARM
-: Reserve_Space_loop                00000C20  Local -- ARM
-: he                                00000C40  Local -- ARM
-: Reserve_Page                      00000C44  Local -- ARM
-: Reserve_Page_Loop                 00000C54  Local -- ARM
-: memory_free                       00000C78  Local -- ARM
-: memory_free_loop                  00000C90  Local -- ARM
-: memory_free_failure               00000CB8  Local -- ARM
-: memory_clean                      00000CC0  Local -- ARM
-: memory_clean_loop                 00000CD0  Local -- ARM
-: Page_Table_Start                  00000CEC  Local -- ARM
-: Page_Table_End                    00000D2C  Local -- ARM
-: Shedule_Add                       00000D2C  Local -- ARM
-: Shedule_Add_kernal                00000D58  Local -- ARM
-: Shedule_Add_Loop                  00000D60  Local -- ARM
-: Shedule_Add_Prohibited            00000D78  Local -- ARM
-: Shedule_Get_Next                  00000D7C  Local -- ARM
-: Shedule_Empty                     00000D9C  Local -- ARM
-: LED_Owner                         00000DA4  Local -- ARM
-: Set_LED                           00000DA8  Local -- ARM
-: Set_LED_Main                      00000DD0  Local -- ARM
-: Reserve_LED                       00000DF8  Local -- ARM
-: LEDInUse                          00000E10  Local -- ARM
-: LCD_Owner                         00000E18  Local -- ARM
-: SVC_printChar                     00000E1C  Local -- ARM
-: printChar_Status                  00000E48  Local -- ARM
-: printChar_s                       00000E90  Local -- ARM
-: Reserve_LCD                       00000EE0  Local -- ARM
-: LCDInUse                          00000EF8  Local -- ARM
-: Release_LCD_Ownership             00000F00  Local -- ARM
-: Peripheral                        00000F34  Local -- ARM
-: Start_Process                     00000F34  Local -- ARM
-: Start_Process_Denied              00000FA8  Local -- ARM
+: Serial_RxD_Buffer_Address         00000190  Local -- ARM
+: Serial_TxD_Buffer_Address         000001A8  Local -- ARM
+: current_process                   000001AC  Local -- ARM
+: sheduler_ready_list_start         000001B0  Local -- ARM
+: Supervisor_Stack_Size             00000250  Value
+: Interrupt_Stack_Size              00000250  Value
+: Supervisor_Stack_Start            000001B4  Local -- ARM
+: Supervisor_Stack_End              00000404  Local -- ARM
+: Interrupt_Stack_Start             00000404  Local -- ARM
+: Interrupt_Stack_End               00000654  Local -- ARM
+: Serial_RxD_Buffer_Size            00000250  Value
+: Serial_TxD_Buffer_Size            00000250  Value
+: Serial_RxD_Buffer_Start           00000654  Local -- ARM
+: Serial_RxD_Buffer_End             000008A4  Local -- ARM
+: Serial_TxD_Buffer_Start           000008A4  Local -- ARM
+: Serial_TxD_Buffer_End             00000AF4  Local -- ARM
+: Interrupt_Set                     00000AF4  Local -- ARM
+: Interrupt_Off                     00000B08  Local -- ARM
+: Transmit_word                     00000B1C  Local -- ARM
+: Transmit_word_send                00000B58  Local -- ARM
+: Context_Switch                    00000B64  Local -- ARM
+: Context_Switch_Store_Return       00000B68  Local -- ARM
+: Context_Store                     00000B9C  Local -- ARM
+: Context_Load                      00000BC4  Local -- ARM
+: memory_request                    00000BE4  Local -- ARM
+: Reserve_Space_loop                00000BF4  Local -- ARM
+: he                                00000C14  Local -- ARM
+: Reserve_Page                      00000C18  Local -- ARM
+: Reserve_Page_Loop                 00000C28  Local -- ARM
+: memory_free                       00000C4C  Local -- ARM
+: memory_free_loop                  00000C64  Local -- ARM
+: memory_free_failure               00000C8C  Local -- ARM
+: memory_clean                      00000C94  Local -- ARM
+: memory_clean_loop                 00000CA4  Local -- ARM
+: Page_Table_Start                  00000CC0  Local -- ARM
+: Page_Table_End                    00000D00  Local -- ARM
+: Shedule_Add                       00000D00  Local -- ARM
+: Shedule_Add_kernal                00000D24  Local -- ARM
+: Shedule_Add_Loop                  00000D2C  Local -- ARM
+: Shedule_Add_Prohibited            00000D40  Local -- ARM
+: Shedule_Get_Next                  00000D44  Local -- ARM
+: Shedule_Empty                     00000D60  Local -- ARM
+: LED_Owner                         00000D68  Local -- ARM
+: Set_LED                           00000D6C  Local -- ARM
+: Set_LED_Main                      00000D94  Local -- ARM
+: Reserve_LED                       00000DBC  Local -- ARM
+: LEDInUse                          00000DD4  Local -- ARM
+: LCD_Owner                         00000DDC  Local -- ARM
+: SVC_printChar                     00000DE0  Local -- ARM
+: printChar_Status                  00000E0C  Local -- ARM
+: printChar_s                       00000E54  Local -- ARM
+: Reserve_LCD                       00000EA4  Local -- ARM
+: LCDInUse                          00000EBC  Local -- ARM
+: Release_LCD_Ownership             00000EC4  Local -- ARM
+: Peripheral                        00000EF8  Local -- ARM
+: Start_Process                     00000EF8  Local -- ARM
+: Start_Process_Denied              00000F6C  Local -- ARM
 : Word_Size                         00000004  Value
 : Terminal_Data                     00000010  Value
 : Terminal_Control                  00000014  Value
@@ -1445,62 +1430,62 @@ Symbol Table: Labels
 : buffer_tail                       0000000C  Offset
 : buffer_waiter                     00000010  Offset
 : buffer_data                       00000014  Offset
-: buffer_initialise                 00000FAC  Local -- ARM
-: buffer_put                        00000FD4  Local -- ARM
-: buffer_full                       00001018  Local -- ARM
-: buffer_get                        00001020  Local -- ARM
-: buffer_empty                      00001058  Local -- ARM
+: buffer_initialise                 00000F70  Local -- ARM
+: buffer_put                        00000F98  Local -- ARM
+: buffer_full                       00000FDC  Local -- ARM
+: buffer_get                        00000FE4  Local -- ARM
+: buffer_empty                      0000101C  Local -- ARM
 : pointer_next                      00000000  Offset
 : process_id                        00000004  Offset
 : process_constructor               00000008  Offset
-: context_switch_pointer            0000000C  Offset
+: context_switch_pointer            00000044  Offset
 : data                              00000004  Offset
-: linked_list_add                   000010C8  Local -- ARM
-: linked_list_add_loop              000010DC  Local -- ARM
-: linked_list_add_end               000010F0  Local -- ARM
-: linked_list_get                   000010F4  Local -- ARM
-: linked_list_remove                00001110  Local -- ARM
-: linked_list_remove_failed         00001130  Local -- ARM
-: linked_list_find                  00001134  Local -- ARM
-: linked_list_find_loop             0000113C  Local -- ARM
-: linked_list_find_item_found       00001164  Local -- ARM
-: linked_list_find_end_of_list      00001170  Local -- ARM
-: Idle                              00001178  Local -- ARM
-: Terminal_Handler_Process          00001208  Local -- ARM
-: Lights_Handler_Process            000012E0  Local -- ARM
-: HelloWorld_Handler_Process        00001370  Local -- ARM
-: malloc                            00001400  Local -- ARM
-: printString                       00001410  Local -- ARM
-: printStringLoop                   00001418  Local -- ARM
-: printCharLoop                     00001428  Local -- ARM
-: printFailed                       00001440  Local -- ARM
-: print_String_Complete             00001444  Local -- ARM
-: Lights_Handler_Constructor        0000144C  Local -- ARM
-: lights_loop                       00001460  Local -- ARM
-: Terminal_Handler_Constructor      00001464  Local -- ARM
-: Terminal_Handler_Main_Loop        00001488  Local -- ARM
-: Transmit                          000014B4  Local -- ARM
-: Terminal_Handler_Commands         000014BC  Local -- ARM
-: printHello                        000014D4  Local -- ARM
-: LED_Show                          000014E4  Local -- ARM
-: string                            000014F4  Local -- ARM
-: HelloWorld_Handler_Constructor    00001504  Local -- ARM
-: HelloWorld_Loop                   00001514  Local -- ARM
+: linked_list_add                   00001024  Local -- ARM
+: linked_list_add_loop              00001038  Local -- ARM
+: linked_list_add_end               0000104C  Local -- ARM
+: linked_list_get                   00001050  Local -- ARM
+: linked_list_remove                0000106C  Local -- ARM
+: linked_list_remove_failed         0000108C  Local -- ARM
+: linked_list_find                  00001090  Local -- ARM
+: linked_list_find_loop             00001098  Local -- ARM
+: linked_list_find_item_found       000010C0  Local -- ARM
+: linked_list_find_end_of_list      000010CC  Local -- ARM
+: Idle                              000010D4  Local -- ARM
+: Terminal_Handler_Process          00001164  Local -- ARM
+: Lights_Handler_Process            0000123C  Local -- ARM
+: HelloWorld_Handler_Process        000012CC  Local -- ARM
+: malloc                            0000135C  Local -- ARM
+: printString                       0000136C  Local -- ARM
+: printStringLoop                   00001374  Local -- ARM
+: printCharLoop                     00001384  Local -- ARM
+: printFailed                       0000139C  Local -- ARM
+: print_String_Complete             000013A0  Local -- ARM
+: Lights_Handler_Constructor        000013A8  Local -- ARM
+: lights_loop                       000013BC  Local -- ARM
+: Terminal_Handler_Constructor      000013C0  Local -- ARM
+: Terminal_Handler_Main_Loop        000013E4  Local -- ARM
+: Transmit                          00001410  Local -- ARM
+: Terminal_Handler_Commands         00001418  Local -- ARM
+: printHello                        00001430  Local -- ARM
+: LED_Show                          00001440  Local -- ARM
+: string                            00001450  Local -- ARM
+: HelloWorld_Handler_Constructor    00001460  Local -- ARM
+: HelloWorld_Loop                   00001470  Local -- ARM
 : Terminal_Handler_Stack_Size       00000200  Value
 : Lights_Stack_Size                 00000016  Value
 : HelloWorld_Stack_size             00000016  Value
 : Idle_Stack_Size                   00000020  Value
 : StandardIn_Buffer_Size            00000064  Value
-: Terminal_Handler_Stack_Start      00001518  Local -- ARM
-: Terminal_Handler_Stack_End        00001718  Local -- ARM
-: Lights_Stack_Start                00001718  Local -- ARM
-: Lights_Stack_End                  0000172E  Local -- ARM
-: HelloWorld_Stack_Start            00001730  Local -- ARM
-: HelloWorld_Stack_End              00001746  Local -- ARM
-: StandardIn_start                  00001748  Local -- ARM
-: StandardIn_End                    000017AC  Local -- ARM
-: Idle_Stack_Start                  000017AC  Local -- ARM
-: Idle_Stack_End                    000017CC  Local -- ARM
-: Idle_Constructor                  000017CC  Local -- ARM
-: Idle_Loop                         000017D0  Local -- ARM
+: Terminal_Handler_Stack_Start      00001474  Local -- ARM
+: Terminal_Handler_Stack_End        00001674  Local -- ARM
+: Lights_Stack_Start                00001674  Local -- ARM
+: Lights_Stack_End                  0000168A  Local -- ARM
+: HelloWorld_Stack_Start            0000168C  Local -- ARM
+: HelloWorld_Stack_End              000016A2  Local -- ARM
+: StandardIn_start                  000016A4  Local -- ARM
+: StandardIn_End                    00001708  Local -- ARM
+: Idle_Stack_Start                  00001708  Local -- ARM
+: Idle_Stack_End                    00001728  Local -- ARM
+: Idle_Constructor                  00001728  Local -- ARM
+: Idle_Loop                         0000172C  Local -- ARM
 : RAM_Size                          00002000  Value

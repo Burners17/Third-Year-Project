@@ -3,34 +3,27 @@ struct
 pointer_next           word 
 process_id             word 
 process_constructor    word
-DEFW 0
-DEFW 0
-DEFW 0
-DEFW 0
-DEFW 0
-DEFW 0
-DEFW 0
-DEFW 0
-DEFW 0
-DEFW 0
-DEFW 0
-DEFW 0
-DEFW 0
-
+word 
+word 
+word
+word
+word
+word
+word 
+word 
+word
+word
+word
+word
+word
+word
 context_switch_pointer  word
-DEFW 0
-DEFW 0
-DEFW 0
-DEFW 0
-DEFW 0
-DEFW 0
-DEFW 0
-DEFW 0
-DEFW 0
-DEFW 0
-DEFW 0
-DEFW 0
-DEFW 0
+word 
+word 
+word
+word
+word
+word
 
     struct_align
 Align 

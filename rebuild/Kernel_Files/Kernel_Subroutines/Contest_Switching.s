@@ -1,7 +1,6 @@
 ; File who does c
 
 Context_Switch
-    ; Function to check status of sheduler, maybe get the next one here 
     B       Context_Store
 Context_Switch_Store_Return
     ; no need to protect registers since they will be overwritten later anyway 
