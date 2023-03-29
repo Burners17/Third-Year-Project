@@ -77,10 +77,13 @@ printChar_s
     ; set E Low 
     LDRB    R5, [R4, #Port_B]     ; Gets value of Port_B and stores it in R4
     BIC     R5, R5, #E_En         ; Sets LCD Enable Bus LOW
+    
+    STRB    R5, [R4, #Port_B]     ; Sends updated instructions to Port_B
+    ORR     R5, R5, #LED_On
     STRB    R5, [R4, #Port_B]     ; Sends updated instructions to Port_B
     ; Restore state of interface and LEDS if they had been set
     STRB    R6, [R4, #Port_A]
-    STRB    R7, [R4, #Port_B]
+    ;STRB    R7, [R4, #Port_B]
     MOV     R1, #0
     MOV     R2, #0
     POP     {R4-R7,PC} 

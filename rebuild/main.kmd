@@ -35,7 +35,7 @@ KMD
 0000004C:             ; 
 0000004C:             ; SVC_Jump_Table_Size EQU SVC_Jump_Table_End - SVC_Jump_Table
 0000004C: 00000E00    ; SVC_Jump_Table      DEFW SVC_printChar
-00000050: 00000EE4    ;                     DEFW Release_LCD_Ownership
+00000050: 00000EE8    ;                     DEFW Release_LCD_Ownership
 00000054: 00000D8C    ;                     DEFW Set_LED 
 00000058: 00000B2C    ;                     DEFW Transmit_word
 0000005C: 00000F18    ;                     DEFW Start_Process 
@@ -638,13 +638,13 @@ KMD
 00000E0C: E5144000    ;     LDR     R4, [R4]
 00000E10: E3540000    ;     CMP     R4, #0
 00000E14:             ;     ; if not reserve it 
-00000E14: 0A00002A    ;     BEQ     Reserve_LCD
+00000E14: 0A00002B    ;     BEQ     Reserve_LCD
 00000E18:             ;     ; check if the proccess has reserved the LCD 
 00000E18: E24F5064    ;     ADRL    R5, current_process
 00000E1C: E2455B03    ; 
 00000E20: E5155000    ;     LDR     R5, [R5]
 00000E24: E1540005    ;     CMP     R4, R5
-00000E28: 1A00002B    ;     BNE     LCDInUse
+00000E28: 1A00002C    ;     BNE     LCDInUse
 00000E2C:             ; 
 00000E2C:             ;     ; else return failure to print 
 00000E2C:             ; printChar_Status
@@ -704,39 +704,41 @@ KMD
 00000EA4:             ;     ; set E Low 
 00000EA4: E5D45004    ;     LDRB    R5, [R4, #Port_B]     ; Gets value of Port_B and stores it in R4
 00000EA8: E3C55001    ;     BIC     R5, R5, #E_En         ; Sets LCD Enable Bus LOW
+00000EAC:             ;     
 00000EAC: E5C45004    ;     STRB    R5, [R4, #Port_B]     ; Sends updated instructions to Port_B
-00000EB0:             ;     ; Restore state of interface and LEDS if they had been set
-00000EB0: E5C46000    ;     STRB    R6, [R4, #Port_A]
-00000EB4: E5C47004    ;     STRB    R7, [R4, #Port_B]
-00000EB8: E3A01000    ;     MOV     R1, #0
-00000EBC: E3A02000    ;     MOV     R2, #0
-00000EC0: E8BD80F0    ;     POP     {R4-R7,PC} 
-00000EC4:             ; 
-00000EC4:             ; 
-00000EC4:             ; Reserve_LCD
-00000EC4: E24F40D0    ;     ADRL    R4, LCD_Owner
-00000EC8: E24F5F45    ;     ADRL    R5, current_process
-00000ECC: E2455B03    ; 
-00000ED0: E5155000    ;     LDR     R5, [R5]
-00000ED4: E5045000    ;     STR     R5, [R4]
-00000ED8: EAFFFFD3    ;     B printChar_Status
-00000EDC:             ; 
-00000EDC:             ; 
-00000EDC:             ; LCDInUse
-00000EDC: E3A02001    ;     MOV     R2, #1 
-00000EE0: E8BD4030    ;     POP     {R4,R5, LR}
-00000EE4:             ; 
-00000EE4:             ; ; Function 2 
-00000EE4:             ; ; send something to a peripheral 
-00000EE4:             ; 
-00000EE4:             ; Release_LCD_Ownership 
-00000EE4:             ;     ; this function releases the ownership of the lcd 
-00000EE4: E92D4030    ;     PUSH    {R4, R5, LR}
-00000EE8:             ;     ; first it checks that this process is the current owner of the LCD 
-00000EE8: E24F40F4    ;     ADRL    R4, LCD_Owner 
-00000EEC: E5144000    ;     LDR     R4, [R4]
-00000EF0: E24F5F4F    ;     ADRL    R5, current_process
-00000EF4: E2455B03    ; 
+00000EB0: E3855010    ;     ORR     R5, R5, #LED_On
+00000EB4: E5C45004    ;     STRB    R5, [R4, #Port_B]     ; Sends updated instructions to Port_B
+00000EB8:             ;     ; Restore state of interface and LEDS if they had been set
+00000EB8: E5C46000    ;     STRB    R6, [R4, #Port_A]
+00000EBC:             ;     ;STRB    R7, [R4, #Port_B]
+00000EBC: E3A01000    ;     MOV     R1, #0
+00000EC0: E3A02000    ;     MOV     R2, #0
+00000EC4: E8BD80F0    ;     POP     {R4-R7,PC} 
+00000EC8:             ; 
+00000EC8:             ; 
+00000EC8:             ; Reserve_LCD
+00000EC8: E24F40D4    ;     ADRL    R4, LCD_Owner
+00000ECC: E24F5F46    ;     ADRL    R5, current_process
+00000ED0: E2455B03    ; 
+00000ED4: E5155000    ;     LDR     R5, [R5]
+00000ED8: E5045000    ;     STR     R5, [R4]
+00000EDC: EAFFFFD2    ;     B printChar_Status
+00000EE0:             ; 
+00000EE0:             ; 
+00000EE0:             ; LCDInUse
+00000EE0: E3A02001    ;     MOV     R2, #1 
+00000EE4: E8BD4030    ;     POP     {R4,R5, LR}
+00000EE8:             ; 
+00000EE8:             ; ; Function 2 
+00000EE8:             ; ; send something to a peripheral 
+00000EE8:             ; 
+00000EE8:             ; Release_LCD_Ownership 
+00000EE8:             ;     ; this function releases the ownership of the lcd 
+00000EE8: E92D4030    ;     PUSH    {R4, R5, LR}
+00000EEC:             ;     ; first it checks that this process is the current owner of the LCD 
+00000EEC: E24F40F8    ;     ADRL    R4, LCD_Owner 
+00000EF0: E5144000    ;     LDR     R4, [R4]
+00000EF4: E24F5D35    ;     ADRL    R5, current_process
 00000EF8: E5155000    ;     LDR     R5, [R5]    
 00000EFC: E1540005    ;     CMP     R4, R5      ; make sure current process is the owner 
 00000F00: 13A00001    ;     MOVNE   R0, #1
@@ -1062,7 +1064,7 @@ KMD
 000010F8:             ; Idle 
 000010F8: 00000000    ;     DEFW 0 ; pointer next
 000010FC: 00000000    ;     DEFW 0  ; process Id 
-00001100: 0000174C    ;     DEFW Idle_Constructor
+00001100: 000017DC    ;     DEFW Idle_Constructor
 00001104: 00000000    ;     DEFW 0 ; process Stack pointer 
 00001108:             ;     DEFS &80 
 00001188:             ;     Align
@@ -1070,7 +1072,7 @@ KMD
 00001188:             ; Terminal_Handler_Process
 00001188: 00000000    ;     DEFW 0 
 0000118C: 00000001    ;     DEFW 1
-00001190: 000013E4    ;     DEFW Terminal_Handler_Constructor
+00001190: 00001474    ;     DEFW Terminal_Handler_Constructor
 00001194: 00000000    ;     DEFW 0 
 00001198:             ;     DEFS &C8 
 00001260:             ;     Align
@@ -1078,259 +1080,259 @@ KMD
 00001260:             ; Lights_Handler_Process 
 00001260: 00000000    ;     DEFW 0 
 00001264: 00000002    ;     DEFW 2
-00001268: 000013CC    ;     DEFW Lights_Handler_Constructor 
+00001268: 0000145C    ;     DEFW Lights_Handler_Constructor 
 0000126C: 00000000    ;     DEFW 0 
-00001270:             ;     DEFS &80 
-000012F0:             ;     Align
-000012F0:             ; 
-000012F0:             ; HelloWorld_Handler_Process 
-000012F0: 00000000    ;     DEFW 0 
-000012F4: 00000003    ;     DEFW 3
-000012F8: 00001484    ;     DEFW HelloWorld_Handler_Constructor 
-000012FC: 00000000    ;     DEFW 0 
-00001300:             ;     DEFS &80 
-00001380:             ;     Align
-00001380:             ; 
-00001380:             ; GET     malloc.s
-00001380:             ; ; this file contains the libary functions malloc and free 
-00001380:             ; 
-00001380:             ; ; This function is used by a user process to reserve memory 
-00001380:             ; ; Inputs 
-00001380:             ; ;   R0 - pointer to list of free memory 
-00001380:             ; ;   R1 - Amount of memeory requested in words 
-00001380:             ; malloc 
-00001380: E92D41F0    ;     PUSH    {R4-R8,LR} 
-00001384:             ;     ; Check if a list of free memeory was provided 
-00001384: E3A04000    ;     MOV R4, #0 
-00001388: E1500004    ;     CMP R0, R4 
-0000138C:             ;     ;BEQ 
-0000138C:             ; 
-0000138C: E8BD81F0    ;     POP     {R4-R8, PC}
-00001390:             ; 
-00001390:             ; 
-00001390:             ; GET     printString.s
-00001390:             ; ;this file contains the print string function 
-00001390:             ; ; it take the following inputs 
-00001390:             ; ; R1 is the string to be printed 
-00001390:             ; ; and returns the following outputs 
-00001390:             ; 
-00001390:             ; ; Working Registers 
-00001390:             ; ; R4 is the pointer to the character to be printed 
-00001390:             ; 
-00001390:             ; 
-00001390:             ; printString 
-00001390: E92D4010    ;     PUSH    {R4, LR}
-00001394: E1A04001    ;     MOV     R4, R1
-00001398:             ; 
-00001398:             ; printStringLoop 
-00001398: E5540000    ;     LDRB    R0, [R4]   ; Get next character to be printed
-0000139C: E2844001    ;     ADD     R4, R4, #1 
-000013A0: E3500000    ;     CMP     R0, #0 
-000013A4: 0A000006    ;     BEQ     print_String_Complete     ; Return to printString Call and restores Registers to be
+00001270:             ;     DEFS &C8 
+00001338:             ;     Align
+00001338:             ; 
+00001338:             ; HelloWorld_Handler_Process 
+00001338: 00000000    ;     DEFW 0 
+0000133C: 00000003    ;     DEFW 3
+00001340: 00001514    ;     DEFW HelloWorld_Handler_Constructor 
+00001344: 00000000    ;     DEFW 0 
+00001348:             ;     DEFS &C8 
+00001410:             ;     Align
+00001410:             ; 
+00001410:             ; GET     malloc.s
+00001410:             ; ; this file contains the libary functions malloc and free 
+00001410:             ; 
+00001410:             ; ; This function is used by a user process to reserve memory 
+00001410:             ; ; Inputs 
+00001410:             ; ;   R0 - pointer to list of free memory 
+00001410:             ; ;   R1 - Amount of memeory requested in words 
+00001410:             ; malloc 
+00001410: E92D41F0    ;     PUSH    {R4-R8,LR} 
+00001414:             ;     ; Check if a list of free memeory was provided 
+00001414: E3A04000    ;     MOV R4, #0 
+00001418: E1500004    ;     CMP R0, R4 
+0000141C:             ;     ;BEQ 
+0000141C:             ; 
+0000141C: E8BD81F0    ;     POP     {R4-R8, PC}
+00001420:             ; 
+00001420:             ; 
+00001420:             ; GET     printString.s
+00001420:             ; ;this file contains the print string function 
+00001420:             ; ; it take the following inputs 
+00001420:             ; ; R1 is the string to be printed 
+00001420:             ; ; and returns the following outputs 
+00001420:             ; 
+00001420:             ; ; Working Registers 
+00001420:             ; ; R4 is the pointer to the character to be printed 
+00001420:             ; 
+00001420:             ; 
+00001420:             ; printString 
+00001420: E92D4010    ;     PUSH    {R4, LR}
+00001424: E1A04001    ;     MOV     R4, R1
+00001428:             ; 
+00001428:             ; printStringLoop 
+00001428: E5540000    ;     LDRB    R0, [R4]   ; Get next character to be printed
+0000142C: E2844001    ;     ADD     R4, R4, #1 
+00001430: E3500000    ;     CMP     R0, #0 
+00001434: 0A000006    ;     BEQ     print_String_Complete     ; Return to printString Call and restores Registers to be
                       ; fore call
-000013A8:             ; printCharLoop
-000013A8: EF000000    ;     SVC     Print_String_SVC        ; needs to be implemented 
-000013AC: E3510000    ;     CMP     R1, #0          ; loops incase LCD is not ready 
-000013B0: 1AFFFFFC    ;     BNE     printCharLoop  
-000013B4: E3520000    ;     CMP     R2, #0          ; occurs when a print was unsucessful, perhase due to ownership iss
+00001438:             ; printCharLoop
+00001438: EF000000    ;     SVC     Print_String_SVC        ; needs to be implemented 
+0000143C: E3510000    ;     CMP     R1, #0          ; loops incase LCD is not ready 
+00001440: 1AFFFFFC    ;     BNE     printCharLoop  
+00001444: E3520000    ;     CMP     R2, #0          ; occurs when a print was unsucessful, perhase due to ownership iss
                       ; ues
-000013B8: 1A000000    ;     BNE     printFailed
-000013BC: EAFFFFF5    ;     B       printStringLoop
-000013C0:             ; 
-000013C0:             ; printFailed
-000013C0: EAFFFFFE    ;     B printFailed
-000013C4:             ; 
-000013C4:             ; print_String_Complete
-000013C4: EF000004    ;     SVC     Release_LCD_SVC
-000013C8: E8BD8010    ;     POP     {R4, PC}
-000013CC:             ; 
-000013CC:             ; ; print char svc will check if the LCD is ready and if so print otherwise it will return 
-000013CC:             ; 
-000013CC:             ; Get user/user_main.s
-000013CC:             ; ; File to make it easy to load all user files 
-000013CC:             ; GET     Lights.s 
-000013CC:             ; ; This file is for using the LEDS 
-000013CC:             ; Lights_Handler_Constructor
-000013CC:             ; ; set up stack 
-000013CC: E28FD0DA    ; ADRL    SP, Lights_Stack_End
-000013D0: E28DDC02    ; 
-000013D4:             ; 
-000013D4:             ; ; set and LED 
-000013D4:             ; 
-000013D4: E3A000D0    ;     MOV     R0, #0b1101_0000 
-000013D8: E3A01022    ;     MOV     R1, #0b0010_0010
-000013DC: EF000008    ;     SVC     LED_SVC
-000013E0:             ; 
-000013E0: EAFFFFFE    ; lights_loop B lights_loop
-000013E4:             ; 
-000013E4:             ; ; loop in place 
-000013E4:             ; ; Terminal Handler 
-000013E4:             ; GET Terminal_Handler.s
-000013E4:             ; ; Terminal Handler Process 
-000013E4:             ; ; This process handles intake from the terminal and determines how to respond
-000013E4:             ; 
-000013E4:             ; ;   Register Index 
-000013E4:             ;     ; R9  Holds last input character 
-000013E4:             ;     ; R10 is used to tell the process if it an echo input or not 1 is echo 0 is not echo 
-000013E4:             ;     ; R11 is used to store address of RxD buffer start  
-000013E4:             ;     ; R12 is used to store address of buffer start 
-000013E4:             ; 
-000013E4:             ; 
-000013E4:             ; Terminal_Handler_Constructor
-000013E4:             ; ; Constructor 
-000013E4:             ;  ; Set up Stack pointer 
-000013E4: E28FDFAB    ;     ADRL    SP, Terminal_Handler_Stack_End
-000013E8:             ; 
-000013E8:             ;  ; Set up Buffer to store input from buffer 
-000013E8: E28FCFB6    ;     ADRL    R12, StandardIn_start
-000013EC:             ;  ; Saves memeory address to process register 
-000013EC: E1A0000C    ;     MOV     R0, R12
-000013F0: E3A01064    ;     MOV     R1, #StandardIn_Buffer_Size
-000013F4: EBFFFEE5    ;     BL      buffer_initialise
-000013F8:             ; 
-000013F8:             ; ;
-000013F8:             ; ; Main 
-000013F8:             ;  ; Set up Constants 
-000013F8: E24FBE26    ;   ADRL    R11, Serial_RxD_Buffer_Address 
-000013FC: E24BBA01    ; 
-00001400: E51BB000    ;   LDR     R11, [R11]
-00001404: E3A0A001    ;   MOV     R10, #1   ; Boolean for echo 
-00001408:             ;     ;MOV     R10, #Terminal_Control
-00001408:             ;     ;MOV     R9, #Terminal_Data
-00001408:             ; 
-00001408:             ;  ;
-00001408:             ;  ; Second it needs to handler what happens when it is called 
-00001408:             ; Terminal_Handler_Main_Loop
-00001408:             ;   ; Requests control of RxD and TxD 
-00001408:             ;   ; XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-00001408:             ;   ; 
-00001408:             ;   ; Check if there is anything in the RxD Buffer 
-00001408: E1A0000B    ;     MOV     R0, R11 
-0000140C: EBFFFEFC    ;     BL      buffer_get
-00001410: E3500000    ;     CMP     R0, #&0
-00001414: 0AFFFFFB    ;     BEQ     Terminal_Handler_Main_Loop
-00001418:             ;     
-00001418:             ;     ; Check if the input is an Enter
-00001418: E350000A    ;     CMP     R0, #&A
-0000141C: 0A000006    ;     BEQ     Terminal_Handler_Commands
-00001420: 11A09000    ;     MOVNE   R9, R0
-00001424:             ; 
-00001424:             ;   ; Check if in protected mode 
-00001424: E35A0001    ;     CMP     R10, #1
-00001428: 0B000001    ;     BLEQ     Transmit 
-0000142C:             ;   ;
-0000142C:             ; 
-0000142C:             ;     ;   if it is an enter check if it is a known command 
-0000142C:             ;         ; Checks if it has recieved a input from the serie line 
-0000142C:             ; 
-0000142C:             ;     ; Checks to see what the input is and if it shoudl do anyting 
-0000142C:             ;     ;   if it is enter it checks what it needs to do 
-0000142C:             ;     ; Places input into StandardIn Buffer 
-0000142C:             ;     ; Checks to see if it is in echo to terminal mode or not 
-0000142C:             ;     ;   If it is it send it to TxD Buffer 
-0000142C: E1A09000    ;     MOV   R9, R0
-00001430: EAFFFFF4    ;   B Terminal_Handler_Main_Loop
-00001434:             ; Transmit 
-00001434:             ; ;B     Terminal_Handler_Main_Loop
-00001434:             ; ; This function is responsible for transmitting 
-00001434: EF00000C    ;   SVC   Transmit_SVC
-00001438: EAFFFFF2    ;   B     Terminal_Handler_Main_Loop
-0000143C:             ; Terminal_Handler_Commands
-0000143C:             ;     ; This function will check input against commands 
-0000143C: E3590031    ;     CMP   R9, #&31 
-00001440: 0A000003    ;     BEQ   printHello
-00001444:             ;     
-00001444: E3590032    ;     CMP   R9, #&32
-00001448: 0A000005    ;     BEQ   LED_Show
-0000144C:             ; 
-0000144C: E3A09000    ;     MOV   R9, #0 
-00001450: EAFFFFEC    ;     B     Terminal_Handler_Main_Loop
+00001448: 1A000000    ;     BNE     printFailed
+0000144C: EAFFFFF5    ;     B       printStringLoop
+00001450:             ; 
+00001450:             ; printFailed
+00001450: EAFFFFFE    ;     B printFailed
 00001454:             ; 
-00001454:             ; printHello  
-00001454: E24F0F5B    ;     ADRL  R0, HelloWorld_Handler_Process 
-00001458: EF000010    ;     SVC   Start_Process_SVC
-0000145C: E3A09000    ;     MOV   R9, #0 
-00001460: EAFFFFF5    ;     B     Terminal_Handler_Commands
+00001454:             ; print_String_Complete
+00001454: EF000004    ;     SVC     Release_LCD_SVC
+00001458: E8BD8010    ;     POP     {R4, PC}
+0000145C:             ; 
+0000145C:             ; ; print char svc will check if the LCD is ready and if so print otherwise it will return 
+0000145C:             ; 
+0000145C:             ; Get user/user_main.s
+0000145C:             ; ; File to make it easy to load all user files 
+0000145C:             ; GET     Lights.s 
+0000145C:             ; ; This file is for using the LEDS 
+0000145C:             ; Lights_Handler_Constructor
+0000145C:             ; ; set up stack 
+0000145C: E28FD0DA    ; ADRL    SP, Lights_Stack_End
+00001460: E28DDC02    ; 
 00001464:             ; 
-00001464:             ; LED_Show    
-00001464: E24F0F83    ;     ADRL  R0, Lights_Handler_Process
-00001468: EF000010    ;     SVC   Start_Process_SVC
-0000146C: E3A09000    ;     MOV   R9, #0 
-00001470: EAFFFFF1    ;     B     Terminal_Handler_Commands
+00001464:             ; ; set and LED 
+00001464:             ; 
+00001464: E3A000D0    ;     MOV     R0, #0b1101_0000 
+00001468: E3A01022    ;     MOV     R1, #0b0010_0010
+0000146C: EF000008    ;     SVC     LED_SVC
+00001470:             ; 
+00001470: EAFFFFFE    ; lights_loop B lights_loop
+00001474:             ; 
+00001474:             ; ; loop in place 
+00001474:             ; ; Terminal Handler 
+00001474:             ; GET Terminal_Handler.s
+00001474:             ; ; Terminal Handler Process 
+00001474:             ; ; This process handles intake from the terminal and determines how to respond
+00001474:             ; 
+00001474:             ; ;   Register Index 
+00001474:             ;     ; R9  Holds last input character 
+00001474:             ;     ; R10 is used to tell the process if it an echo input or not 1 is echo 0 is not echo 
+00001474:             ;     ; R11 is used to store address of RxD buffer start  
+00001474:             ;     ; R12 is used to store address of buffer start 
 00001474:             ; 
 00001474:             ; 
-00001474:             ; 
-00001474:             ; 
-00001474:             ; GET     HelloWorld.s
-00001474:             ; ; This file is used to print the hello world statement to the LCD 
-00001474:             ; 
-00001474: 48 65 31 32 ; string      DEFB  'He12o Wor3d!',0
-00001478: 6F 20 57 6F ; 
-0000147C: 72 33 64 21 ; 
-00001480: 00          ; 
-00001484:             ;             align
-00001484:             ; 
-00001484:             ; 
-00001484:             ; HelloWorld_Handler_Constructor
-00001484:             ; ; set up stack 
-00001484: E28FD03A    ; ADRL    SP, HelloWorld_Stack_End
-00001488: E28DDC02    ; 
-0000148C:             ; 
-0000148C:             ; ; set and LCD 
-0000148C: E24F1020    ; ADRL    R1, string
-00001490: EBFFFFBE    ; BL      printString 
-00001494:             ; 
-00001494: EAFFFFFE    ; HelloWorld_Loop B HelloWorld_Loop
+00001474:             ; Terminal_Handler_Constructor
+00001474:             ; ; Constructor 
+00001474:             ;  ; Set up Stack pointer 
+00001474: E28FDFAB    ;     ADRL    SP, Terminal_Handler_Stack_End
+00001478:             ; 
+00001478:             ;  ; Set up Buffer to store input from buffer 
+00001478: E28FCFB6    ;     ADRL    R12, StandardIn_start
+0000147C:             ;  ; Saves memeory address to process register 
+0000147C: E1A0000C    ;     MOV     R0, R12
+00001480: E3A01064    ;     MOV     R1, #StandardIn_Buffer_Size
+00001484: EBFFFEC1    ;     BL      buffer_initialise
+00001488:             ; 
+00001488:             ; ;
+00001488:             ; ; Main 
+00001488:             ;  ; Set up Constants 
+00001488: E24FBE2F    ;   ADRL    R11, Serial_RxD_Buffer_Address 
+0000148C: E24BBA01    ; 
+00001490: E51BB000    ;   LDR     R11, [R11]
+00001494: E3A0A001    ;   MOV     R10, #1   ; Boolean for echo 
+00001498:             ;     ;MOV     R10, #Terminal_Control
+00001498:             ;     ;MOV     R9, #Terminal_Data
 00001498:             ; 
-00001498:             ; 
-00001498:             ; ; loop in place 
-00001498:             ; 
-00001498:             ; ; Temp permanent memeory for user processes 
-00001498:             ; GET user_memory.s
-00001498:             ; 
-00001498:             ; ; variable for different stacks 
-00001498:             ; Terminal_Handler_Stack_Size EQU &200
-00001498:             ; Lights_Stack_Size           EQu &16
-00001498:             ; HelloWorld_Stack_size       EQU &16
-00001498:             ; Idle_Stack_Size EQU &20
-00001498:             ;     Align 
-00001498:             ; StandardIn_Buffer_Size      EQU &64
-00001498:             ;     Align
-00001498:             ;         ; Terminal Handler Stack 
-00001498:             ;         
-00001498:             ;         Terminal_Handler_Stack_Start   DEFS Terminal_Handler_Stack_Size ; Terminal_Handler Stac
+00001498:             ;  ;
+00001498:             ;  ; Second it needs to handler what happens when it is called 
+00001498:             ; Terminal_Handler_Main_Loop
+00001498:             ;   ; Requests control of RxD and TxD 
+00001498:             ;   ; XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+00001498:             ;   ; 
+00001498:             ;   ; Check if there is anything in the RxD Buffer 
+00001498: E1A0000B    ;     MOV     R0, R11 
+0000149C: EBFFFED8    ;     BL      buffer_get
+000014A0: E3500000    ;     CMP     R0, #&0
+000014A4: 0AFFFFFB    ;     BEQ     Terminal_Handler_Main_Loop
+000014A8:             ;     
+000014A8:             ;     ; Check if the input is an Enter
+000014A8: E350000A    ;     CMP     R0, #&A
+000014AC: 0A000006    ;     BEQ     Terminal_Handler_Commands
+000014B0: 11A09000    ;     MOVNE   R9, R0
+000014B4:             ; 
+000014B4:             ;   ; Check if in protected mode 
+000014B4: E35A0001    ;     CMP     R10, #1
+000014B8: 0B000001    ;     BLEQ     Transmit 
+000014BC:             ;   ;
+000014BC:             ; 
+000014BC:             ;     ;   if it is an enter check if it is a known command 
+000014BC:             ;         ; Checks if it has recieved a input from the serie line 
+000014BC:             ; 
+000014BC:             ;     ; Checks to see what the input is and if it shoudl do anyting 
+000014BC:             ;     ;   if it is enter it checks what it needs to do 
+000014BC:             ;     ; Places input into StandardIn Buffer 
+000014BC:             ;     ; Checks to see if it is in echo to terminal mode or not 
+000014BC:             ;     ;   If it is it send it to TxD Buffer 
+000014BC: E1A09000    ;     MOV   R9, R0
+000014C0: EAFFFFF4    ;   B Terminal_Handler_Main_Loop
+000014C4:             ; Transmit 
+000014C4:             ; ;B     Terminal_Handler_Main_Loop
+000014C4:             ; ; This function is responsible for transmitting 
+000014C4: EF00000C    ;   SVC   Transmit_SVC
+000014C8: EAFFFFF2    ;   B     Terminal_Handler_Main_Loop
+000014CC:             ; Terminal_Handler_Commands
+000014CC:             ;     ; This function will check input against commands 
+000014CC: E3590031    ;     CMP   R9, #&31 
+000014D0: 0A000003    ;     BEQ   printHello
+000014D4:             ;     
+000014D4: E3590032    ;     CMP   R9, #&32
+000014D8: 0A000005    ;     BEQ   LED_Show
+000014DC:             ; 
+000014DC: E3A09000    ;     MOV   R9, #0 
+000014E0: EAFFFFEC    ;     B     Terminal_Handler_Main_Loop
+000014E4:             ; 
+000014E4:             ; printHello  
+000014E4: E24F0F6D    ;     ADRL  R0, HelloWorld_Handler_Process 
+000014E8: EF000010    ;     SVC   Start_Process_SVC
+000014EC: E3A09000    ;     MOV   R9, #0 
+000014F0: EAFFFFF5    ;     B     Terminal_Handler_Commands
+000014F4:             ; 
+000014F4:             ; LED_Show    
+000014F4: E24F0FA7    ;     ADRL  R0, Lights_Handler_Process
+000014F8: EF000010    ;     SVC   Start_Process_SVC
+000014FC: E3A09000    ;     MOV   R9, #0 
+00001500: EAFFFFF1    ;     B     Terminal_Handler_Commands
+00001504:             ; 
+00001504:             ; 
+00001504:             ; 
+00001504:             ; 
+00001504:             ; GET     HelloWorld.s
+00001504:             ; ; This file is used to print the hello world statement to the LCD 
+00001504:             ; 
+00001504: 48 65 31 32 ; string      DEFB  'He12o Wor3d!',0
+00001508: 6F 20 57 6F ; 
+0000150C: 72 33 64 21 ; 
+00001510: 00          ; 
+00001514:             ;             align
+00001514:             ; 
+00001514:             ; 
+00001514:             ; HelloWorld_Handler_Constructor
+00001514:             ; ; set up stack 
+00001514: E28FD03A    ; ADRL    SP, HelloWorld_Stack_End
+00001518: E28DDC02    ; 
+0000151C:             ; 
+0000151C:             ; ; set and LCD 
+0000151C: E24F1020    ; ADRL    R1, string
+00001520: EBFFFFBE    ; BL      printString 
+00001524:             ; 
+00001524: EAFFFFFE    ; HelloWorld_Loop B HelloWorld_Loop
+00001528:             ; 
+00001528:             ; 
+00001528:             ; ; loop in place 
+00001528:             ; 
+00001528:             ; ; Temp permanent memeory for user processes 
+00001528:             ; GET user_memory.s
+00001528:             ; 
+00001528:             ; ; variable for different stacks 
+00001528:             ; Terminal_Handler_Stack_Size EQU &200
+00001528:             ; Lights_Stack_Size           EQu &16
+00001528:             ; HelloWorld_Stack_size       EQU &16
+00001528:             ; Idle_Stack_Size EQU &20
+00001528:             ;     Align 
+00001528:             ; StandardIn_Buffer_Size      EQU &64
+00001528:             ;     Align
+00001528:             ;         ; Terminal Handler Stack 
+00001528:             ;         
+00001528:             ;         Terminal_Handler_Stack_Start   DEFS Terminal_Handler_Stack_Size ; Terminal_Handler Stac
                       ; k
-00001698:             ;         Terminal_Handler_Stack_End
-00001698:             ;              Align
-00001698:             ; 
-00001698:             ;         Lights_Stack_Start              DEFS Lights_Stack_Size
-000016AE:             ;         Lights_Stack_End
-000016B0:             ;             Align
-000016B0:             ; 
-000016B0:             ;         HelloWorld_Stack_Start          DEFS HelloWorld_Stack_size
-000016C6:             ;         HelloWorld_Stack_End
-000016C8:             ;             Align
-000016C8:             ; 
-000016C8:             ;         StandardIn_start DEFS StandardIn_Buffer_Size
-0000172C:             ;         StandardIn_End 
-0000172C:             ;             Align 
-0000172C:             ; 
-0000172C:             ;         Idle_Stack_Start   DEFS Idle_Stack_Size 
-0000174C:             ;         Idle_Stack_End
-0000174C:             ;              Align
-0000174C:             ; 
-0000174C:             ; GET Idle.s
-0000174C:             ; ; this file is the idle file
-0000174C:             ; 
-0000174C:             ; Idle_Constructor
-0000174C: E24FD008    ;     ADRL    SP, Idle_Stack_End
-00001750: EAFFFFFE    ; Idle_Loop B Idle_Loop
-00001754:             ; 
-00001754:             ; 
-00001754:             ; GET     RAM_Space.s
-00001754:             ; ; This fule holds the RAM Space.
-00001754:             ; RAM_Size        EQU &2000  
-00001754:             ; DEFS            RAM_Size
+00001728:             ;         Terminal_Handler_Stack_End
+00001728:             ;              Align
+00001728:             ; 
+00001728:             ;         Lights_Stack_Start              DEFS Lights_Stack_Size
+0000173E:             ;         Lights_Stack_End
+00001740:             ;             Align
+00001740:             ; 
+00001740:             ;         HelloWorld_Stack_Start          DEFS HelloWorld_Stack_size
+00001756:             ;         HelloWorld_Stack_End
+00001758:             ;             Align
+00001758:             ; 
+00001758:             ;         StandardIn_start DEFS StandardIn_Buffer_Size
+000017BC:             ;         StandardIn_End 
+000017BC:             ;             Align 
+000017BC:             ; 
+000017BC:             ;         Idle_Stack_Start   DEFS Idle_Stack_Size 
+000017DC:             ;         Idle_Stack_End
+000017DC:             ;              Align
+000017DC:             ; 
+000017DC:             ; GET Idle.s
+000017DC:             ; ; this file is the idle file
+000017DC:             ; 
+000017DC:             ; Idle_Constructor
+000017DC: E24FD008    ;     ADRL    SP, Idle_Stack_End
+000017E0: EAFFFFFE    ; Idle_Loop B Idle_Loop
+000017E4:             ; 
+000017E4:             ; 
+000017E4:             ; GET     RAM_Space.s
+000017E4:             ; ; This fule holds the RAM Space.
+000017E4:             ; RAM_Size        EQU &2000  
+000017E4:             ; DEFS            RAM_Size
 
 Symbol Table: Labels
 : Undefined_Instruction             00000004  Local -- ARM
@@ -1426,9 +1428,9 @@ Symbol Table: Labels
 : SVC_printChar                     00000E00  Local -- ARM
 : printChar_Status                  00000E2C  Local -- ARM
 : printChar_s                       00000E74  Local -- ARM
-: Reserve_LCD                       00000EC4  Local -- ARM
-: LCDInUse                          00000EDC  Local -- ARM
-: Release_LCD_Ownership             00000EE4  Local -- ARM
+: Reserve_LCD                       00000EC8  Local -- ARM
+: LCDInUse                          00000EE0  Local -- ARM
+: Release_LCD_Ownership             00000EE8  Local -- ARM
 : Peripheral                        00000F18  Local -- ARM
 : Start_Process                     00000F18  Local -- ARM
 : Start_Process_Denied              00000F8C  Local -- ARM
@@ -1464,39 +1466,39 @@ Symbol Table: Labels
 : Idle                              000010F8  Local -- ARM
 : Terminal_Handler_Process          00001188  Local -- ARM
 : Lights_Handler_Process            00001260  Local -- ARM
-: HelloWorld_Handler_Process        000012F0  Local -- ARM
-: malloc                            00001380  Local -- ARM
-: printString                       00001390  Local -- ARM
-: printStringLoop                   00001398  Local -- ARM
-: printCharLoop                     000013A8  Local -- ARM
-: printFailed                       000013C0  Local -- ARM
-: print_String_Complete             000013C4  Local -- ARM
-: Lights_Handler_Constructor        000013CC  Local -- ARM
-: lights_loop                       000013E0  Local -- ARM
-: Terminal_Handler_Constructor      000013E4  Local -- ARM
-: Terminal_Handler_Main_Loop        00001408  Local -- ARM
-: Transmit                          00001434  Local -- ARM
-: Terminal_Handler_Commands         0000143C  Local -- ARM
-: printHello                        00001454  Local -- ARM
-: LED_Show                          00001464  Local -- ARM
-: string                            00001474  Local -- ARM
-: HelloWorld_Handler_Constructor    00001484  Local -- ARM
-: HelloWorld_Loop                   00001494  Local -- ARM
+: HelloWorld_Handler_Process        00001338  Local -- ARM
+: malloc                            00001410  Local -- ARM
+: printString                       00001420  Local -- ARM
+: printStringLoop                   00001428  Local -- ARM
+: printCharLoop                     00001438  Local -- ARM
+: printFailed                       00001450  Local -- ARM
+: print_String_Complete             00001454  Local -- ARM
+: Lights_Handler_Constructor        0000145C  Local -- ARM
+: lights_loop                       00001470  Local -- ARM
+: Terminal_Handler_Constructor      00001474  Local -- ARM
+: Terminal_Handler_Main_Loop        00001498  Local -- ARM
+: Transmit                          000014C4  Local -- ARM
+: Terminal_Handler_Commands         000014CC  Local -- ARM
+: printHello                        000014E4  Local -- ARM
+: LED_Show                          000014F4  Local -- ARM
+: string                            00001504  Local -- ARM
+: HelloWorld_Handler_Constructor    00001514  Local -- ARM
+: HelloWorld_Loop                   00001524  Local -- ARM
 : Terminal_Handler_Stack_Size       00000200  Value
 : Lights_Stack_Size                 00000016  Value
 : HelloWorld_Stack_size             00000016  Value
 : Idle_Stack_Size                   00000020  Value
 : StandardIn_Buffer_Size            00000064  Value
-: Terminal_Handler_Stack_Start      00001498  Local -- ARM
-: Terminal_Handler_Stack_End        00001698  Local -- ARM
-: Lights_Stack_Start                00001698  Local -- ARM
-: Lights_Stack_End                  000016AE  Local -- ARM
-: HelloWorld_Stack_Start            000016B0  Local -- ARM
-: HelloWorld_Stack_End              000016C6  Local -- ARM
-: StandardIn_start                  000016C8  Local -- ARM
-: StandardIn_End                    0000172C  Local -- ARM
-: Idle_Stack_Start                  0000172C  Local -- ARM
-: Idle_Stack_End                    0000174C  Local -- ARM
-: Idle_Constructor                  0000174C  Local -- ARM
-: Idle_Loop                         00001750  Local -- ARM
+: Terminal_Handler_Stack_Start      00001528  Local -- ARM
+: Terminal_Handler_Stack_End        00001728  Local -- ARM
+: Lights_Stack_Start                00001728  Local -- ARM
+: Lights_Stack_End                  0000173E  Local -- ARM
+: HelloWorld_Stack_Start            00001740  Local -- ARM
+: HelloWorld_Stack_End              00001756  Local -- ARM
+: StandardIn_start                  00001758  Local -- ARM
+: StandardIn_End                    000017BC  Local -- ARM
+: Idle_Stack_Start                  000017BC  Local -- ARM
+: Idle_Stack_End                    000017DC  Local -- ARM
+: Idle_Constructor                  000017DC  Local -- ARM
+: Idle_Loop                         000017E0  Local -- ARM
 : RAM_Size                          00002000  Value

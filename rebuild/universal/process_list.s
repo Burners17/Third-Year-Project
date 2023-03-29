@@ -20,7 +20,7 @@ Lights_Handler_Process
     DEFW 2
     DEFW Lights_Handler_Constructor 
     DEFW 0 
-    DEFS &80 
+    DEFS &C8 
     Align
 
 HelloWorld_Handler_Process 
@@ -28,5 +28,5 @@ HelloWorld_Handler_Process
     DEFW 3
     DEFW HelloWorld_Handler_Constructor 
     DEFW 0 
-    DEFS &80 
+    DEFS &C8 
     Align
