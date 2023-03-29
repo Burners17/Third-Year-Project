@@ -51,7 +51,7 @@ Terminal_Handler_Main_Loop
     BLEQ     Transmit 
   ;
 
-    ;   if it is an enter check if it is a known command 
+    ; if it is an enter check if it is a known command 
 	; Checks if it has recieved a input from the serie line 
 
     ; Checks to see what the input is and if it shoudl do anyting 
