@@ -61,6 +61,10 @@ kernal_Initialise
     MSR     CPSR_c, R0                    ; Updates the CPSR
  ;
 ;
+;  clear shedule list 
+   ADRL     R0, sheduler_ready_list_start
+   MOV      R1, #0
+   STR      R1, [R0] 
 ; Initialise first user process which is always terminal handler 
    ADRL     R0, Terminal_Handler_Process
    ADRL     R1, current_process

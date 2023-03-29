@@ -12,17 +12,17 @@ linked_list_add
 ; Inputs 
 ;   R0 Address of start of list     
     PUSH    {R4, LR} 
-    LDR     R4, [R0, #pointer_next]
+    LDR     R4, [R0]
     CMP     R4, #0 
-    STREQ   R1, [R0, #pointer_next]
+    STREQ   R1, [R0]
     BEQ     linked_list_add_end
 linked_list_add_loop
-    LDR     R4, [R0, #pointer_next]
+    LDR     R4, [R0]
     ; See if its null 
     CMP     R4, #&0 
     MOVNE   R0, R4 
     BNE     linked_list_add_loop
-    STR     R1, [R4, #pointer_next]
+    STR     R1, [R0]
 linked_list_add_end
     POP     {R4, PC}
 
@@ -31,13 +31,15 @@ linked_list_get
 ;   R0 pointer to linked list starting location   
 ; Outputs 
 ;   R1 pointer to first item ob list
-    PUSH    {R4, LR}    
+    PUSH    {R4, R5, LR}    
     LDR     R1, [R0]
     CMP     R1, #&0 
-    LDRNE   R4, [R1, #pointer_next]
+    LDRNE   R4, [R1]
     STRNE   R4, [R0]
-    MOVNE   R1, R4
-    POP     {R4, PC}
+    MOVNE   R5, #0 
+    STRNE   R5, [R1]
+    ;MOVNE   R1, R4
+    POP     {R4, R5, PC}
 
 ; Remove Item to List 
 linked_list_remove 
